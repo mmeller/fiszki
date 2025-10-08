@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-tryb Fiszki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#1d4ed8', /* Blue */
+                        'secondary': '#f97316', /* Orange */
+                        'correct': '#d1fae5',
+                        'incorrect': '#fee2e2',
+                        'text-correct': '#065f46',
+                        'text-incorrect': '#991b1b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Styl dla przycisków wielokrotnego wyboru, aby zapewnić responsywność i dobry wygląd */
+        .multi-choice-btn {
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+            white-space: normal; /* Pozwala na zawijanie długich słów */
+        }
+        .tab-button-inactive {
+            border-b-2 border-transparent text-gray-500 hover:bg-gray-200;
+        }
+        .tab-button-active {
+            border-b-4 border-primary text-primary bg-white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-lg bg-white shadow-2xl rounded-2xl p-6 md:p-10 border-t-8 border-primary">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Trening Słownictwa i Zwrotów</h1>
+        <p class="text-center text-gray-500 mb-6">Wpisywanie & Wielokrotny wybór</p>
+        
+        <!-- Sekcja Zakładek/Trybów -->
+        <div class="flex border-b border-gray-300 mb-6">
+            <button id="tab-words" onclick="setQuizMode('words')" class="tab-button w-1/2 p-3 text-lg font-semibold rounded-t-lg transition duration-200"></button>
+            <button id="tab-phrases" onclick="setQuizMode('phrases')" class="tab-button w-1/2 p-3 text-lg font-semibold rounded-t-lg transition duration-200"></button>
+        </div>
+
+        <!-- Sekcja Statystyk -->
+        <div class="flex justify-between items-center text-lg font-medium text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg shadow-inner">
+            <span>Wynik: <span id="score-display" class="font-bold text-primary">0 / 0</span></span>
+            <span>Pozostało: <span id="remaining-display" class="font-bold text-gray-800">0</span></span>
+        </div>
+
+        <!-- Sekcja Fiszek -->
+        <div id="quiz-container" class="space-y-6">
+            
+            <!-- Pole Słówka (PL) -->
+            <div id="word-card" class="bg-white border-4 border-secondary shadow-xl p-8 rounded-xl min-h-[120px] flex flex-col items-center justify-center">
+                <p class="text-xl text-gray-600 mb-2 font-medium">Przetłumacz (lub wybierz) słowo/zwrot:</p>
+                <p id="current-word" class="text-4xl font-extrabold text-secondary text-center">...</p>
+            </div>
+            
+            <!-- Tryby: Wpisywanie / Wielokrotny Wybór -->
+            <div id="input-mode-section">
+                <form id="answer-form" class="flex flex-col space-y-3">
+                    <input type="text" id="user-input" class="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-lg" placeholder="Wpisz tłumaczenie (po angielsku)" required autofocus>
+                    <button type="submit" id="check-button" class="bg-primary text-white p-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-200 shadow-md">
+                        Sprawdź Odpowiedź
+                    </button>
+                </form>
+            </div>
+
+            <div id="multi-choice-section" class="hidden grid grid-cols-2 gap-3">
+                <!-- Opcje będą generowane przez JavaScript -->
+            </div>
+            
+            <!-- Komunikat Zwrotny -->
+            <div id="feedback-box" class="hidden p-4 rounded-lg text-left shadow-lg" role="alert">
+                <p id="feedback-text" class="font-bold mb-1 text-xl"></p>
+                <p id="correct-answer-text" class="text-base"></p>
+            </div>
+        </div>
+
+        <!-- Sekcja Koniec Gry -->
+        <div id="finish-message" class="hidden p-8 bg-primary text-white rounded-xl text-center shadow-lg">
+            <h2 class="text-2xl font-bold mb-3">Sesja Zakończona!</h2>
+            <p class="mb-5">Przerobiłeś wszystkie słówka. Twój końcowy wynik to <strong id="final-score"></strong>.</p>
+            <button onclick="setQuizMode(currentModeName)" class="bg-white text-primary p-3 rounded-lg text-lg font-semibold hover:bg-gray-200 transition duration-200">
+                Powtórz Słówka
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Słówka odwrócone: POLSKI: ANGIELSKI
+        const VOCABULARY_WORDS = {
+            // Countries and continents
+            "Brazylia": "Brazil", "Kanada": "Canada", "Chiny": "China", "Egipt": "Egypt",
+            "Norwegia": "Norway", "Afryka": "Africa", "Antarktyka": "Antarctica",
+            "Azja": "Asia", "Australia": "Australia", "Europa": "Europe",
+            "Ameryka Północna": "North America", "Ameryka Południowa": "South America",
+            // Seasons and weather
+            "wiosna": "spring", "lato": "summer", "jesień": "autumn", "zima": "winter",
+            "pochmurnie": "cloudy", "zimno": "cold", "mgliście": "foggy",
+            "mrożąco": "freezing", "gorąco": "hot", "śnieżnie": "snowy",
+            "słonecznie": "sunny", "ciepło": "warm", "mokro": "wet",
+            "wietrznie": "windy",
+        };
+
+        const VOCABULARY_PHRASES = {
+            // Useful / In an English class
+            "Czas na ...": "It's time for ...",
+            "O nie, znowu!": "Oh no! Not again!",
+            "Do zobaczenia!": "See you later!",
+            "Czy może mi Pan/Pani pomóc?": "Can you help me, please?",
+            "Czy może Pan/Pani powtórzyć?": "Can you repeat that, please?",
+            "Przepraszam, ...": "Excuse me, ...",
+            "Wydaje mi się, że...": "I think it's ...",
+            "Przykro mi, nie wiem.": "I'm sorry, I don't know.",
+            "Co znaczy...?": "What does ... mean?",
+            "Jak po angielsku powiedzieć...?": "What is ... in English?"
+        };
+
+        let currentVocabulary = VOCABULARY_WORDS;
+        let WORDS_PL = Object.keys(currentVocabulary);
+        let currentModeName = 'words'; // 'words' or 'phrases'
+
+        let currentWordPl = '';
+        let remainingWords = [];
+        let score = 0;
+        let total = 0;
+        let currentQuizType = 'input'; // 'input' or 'multi'
+        const MODE_CHANCE = 0.5; // Szansa 50% na wielokrotny wybór
+
+        // Elementy DOM
+        const currentWordEl = document.getElementById('current-word');
+        const userInputEl = document.getElementById('user-input');
+        const answerFormEl = document.getElementById('answer-form');
+        const feedbackBoxEl = document.getElementById('feedback-box');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const correctAnswerTextEl = document.getElementById('correct-answer-text');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const remainingDisplayEl = document.getElementById('remaining-display');
+        const finishMessageEl = document.getElementById('finish-message');
+        const quizContainerEl = document.getElementById('quiz-container');
+        const finalScoreEl = document.getElementById('final-score');
+        const inputModeSectionEl = document.getElementById('input-mode-section');
+        const multiChoiceSectionEl = document.getElementById('multi-choice-section');
+        
+        // Elementy Zakładek
+        const tabWordsEl = document.getElementById('tab-words');
+        const tabPhrasesEl = document.getElementById('tab-phrases');
+
+        /**
+         * Przełącza tryb quizu (słówka lub zwroty) i resetuje stan.
+         */
+        window.setQuizMode = function(mode) {
+            // Ustawiamy nowy tryb tylko jeśli jest różny od obecnego, albo jeśli restartujemy
+            const isSwitching = currentModeName !== mode;
+            currentModeName = mode;
+            
+            // Zmiana słownika
+            if (mode === 'words') {
+                currentVocabulary = VOCABULARY_WORDS;
+                tabWordsEl.textContent = 'Słówka (Kraje/Pogoda)';
+                tabPhrasesEl.textContent = 'Zwroty';
+            } else {
+                currentVocabulary = VOCABULARY_PHRASES;
+                tabWordsEl.textContent = 'Słówka';
+                tabPhrasesEl.textContent = 'Zwroty (Lekcja Angielskiego)';
+            }
+            
+            // Konfiguracja i reset stanu
+            WORDS_PL = Object.keys(currentVocabulary);
+            if (WORDS_PL.length === 0) {
+                 currentWordEl.textContent = "Brak słówek w tej sekcji!";
+                 return;
+            }
+
+            // Aktualizacja stylów zakładek
+            const activeTab = mode === 'words' ? tabWordsEl : tabPhrasesEl;
+            const inactiveTab = mode === 'words' ? tabPhrasesEl : tabWordsEl;
+
+            activeTab.classList.remove('tab-button-inactive', 'border-b-2', 'border-transparent', 'text-gray-500', 'hover:bg-gray-200');
+            activeTab.classList.add('tab-button-active', 'border-b-4', 'border-primary', 'text-primary', 'bg-white');
+
+            inactiveTab.classList.remove('tab-button-active', 'border-b-4', 'border-primary', 'text-primary', 'bg-white');
+            inactiveTab.classList.add('tab-button-inactive', 'border-b-2', 'border-transparent', 'text-gray-500', 'hover:bg-gray-200');
+
+            initializeQuiz(false); // Resetujemy, ale nie zmieniamy trybu (jeśli wywołano z finish screen)
+        }
+
+        /**
+         * Pobiera następne słowo i ustawia tryb.
+         */
+        function getNextQuestion() {
+            if (remainingWords.length === 0) {
+                showFinishScreen();
+                return null;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * remainingWords.length);
+            currentWordPl = remainingWords[randomIndex];
+            remainingWords.splice(randomIndex, 1);
+            
+            currentWordEl.textContent = currentWordPl;
+            
+            // Losowanie trybu
+            currentQuizType = (Math.random() < MODE_CHANCE && WORDS_PL.length >= 4) ? 'multi' : 'input';
+
+            if (currentQuizType === 'multi') {
+                setupMultiChoice(currentWordPl);
+                inputModeSectionEl.classList.add('hidden');
+                multiChoiceSectionEl.classList.remove('hidden');
+            } else {
+                inputModeSectionEl.classList.remove('hidden');
+                multiChoiceSectionEl.classList.add('hidden');
+                userInputEl.value = '';
+                userInputEl.focus();
+            }
+
+            return currentWordPl;
+        }
+
+        /**
+         * Ustawia opcje dla trybu wielokrotnego wyboru.
+         */
+        function setupMultiChoice(correctPlWord) {
+            const correctAnswerEng = currentVocabulary[correctPlWord];
+            const incorrectEngOptions = getIncorrectOptions(correctAnswerEng, 3);
+            
+            const allOptions = [correctAnswerEng, ...incorrectEngOptions];
+            allOptions.sort(() => Math.random() - 0.5);
+
+            multiChoiceSectionEl.innerHTML = '';
+            
+            allOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('multi-choice-btn', 'bg-gray-100', 'text-gray-800', 'p-4', 'rounded-lg', 'font-semibold', 'hover:bg-primary', 'hover:text-white', 'transition', 'duration-200', 'shadow-md', 'text-base');
+                button.dataset.answer = option;
+                button.addEventListener('click', handleMultiChoice);
+                multiChoiceSectionEl.appendChild(button);
+            });
+        }
+        
+        /**
+         * Pobiera losowe, nieprawidłowe opcje tłumaczenia.
+         */
+        function getIncorrectOptions(correctAnswerEng, count) {
+            const allEnglishWords = Object.values(currentVocabulary);
+            const incorrectOptions = allEnglishWords.filter(word => word !== correctAnswerEng);
+            
+            const shuffled = incorrectOptions.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        /**
+         * Obsługuje kliknięcie w trybie wielokrotnego wyboru.
+         */
+        function handleMultiChoice(event) {
+            event.preventDefault();
+            document.querySelectorAll('.multi-choice-btn').forEach(btn => btn.disabled = true);
+
+            const selectedButton = event.target;
+            const selectedAnswer = selectedButton.dataset.answer;
+            const correctTranslation = currentVocabulary[currentWordPl];
+            const isCorrect = selectedAnswer === correctTranslation;
+            
+            selectedButton.classList.remove('hover:bg-primary', 'hover:text-white');
+            if (isCorrect) {
+                selectedButton.classList.add('bg-correct', 'text-text-correct', 'border-2', 'border-text-correct');
+            } else {
+                selectedButton.classList.add('bg-incorrect', 'text-text-incorrect', 'border-2', 'border-text-incorrect');
+                document.querySelectorAll('.multi-choice-btn').forEach(btn => {
+                    if (btn.dataset.answer === correctTranslation) {
+                         btn.classList.add('bg-correct', 'text-text-correct', 'border-2', 'border-text-correct');
+                    }
+                });
+            }
+            
+            processAnswer(isCorrect, correctTranslation, selectedAnswer);
+        }
+
+        /**
+         * Obsługuje przesłanie formularza w trybie wpisywania.
+         */
+        function handleInputSubmit(event) {
+            event.preventDefault();
+            const userAnswer = userInputEl.value.trim();
+            const correctTranslation = currentVocabulary[currentWordPl];
+            const isCorrect = userAnswer.toLowerCase() === correctTranslation.toLowerCase();
+            
+            document.getElementById('check-button').disabled = true;
+
+            processAnswer(isCorrect, correctTranslation, userAnswer);
+        }
+
+        /**
+         * Wspólna logika przetwarzania odpowiedzi.
+         */
+        function processAnswer(isCorrect, correctTranslation, userAnswer) {
+            total++;
+            if (isCorrect) {
+                score++;
+            }
+            
+            displayFeedback(isCorrect, correctTranslation, userAnswer);
+            updateStats();
+            nextFlashcard();
+        }
+
+        /**
+         * Wyświetla informację zwrotną.
+         */
+        function displayFeedback(isCorrect, correctTranslation, userAnswer) {
+            feedbackBoxEl.classList.remove('bg-correct', 'bg-incorrect', 'text-text-correct', 'text-text-incorrect');
+
+            if (isCorrect) {
+                feedbackBoxEl.classList.add('bg-correct', 'text-text-correct');
+                feedbackTextEl.textContent = 'Poprawnie! 🎉';
+            } else {
+                feedbackBoxEl.classList.add('bg-incorrect', 'text-text-incorrect');
+                const displayAnswer = currentQuizType === 'input' ? `(Twoja odp.: "${userAnswer}")` : '';
+                feedbackTextEl.textContent = `Błąd. ❌ ${displayAnswer}`;
+            }
+
+            correctAnswerTextEl.textContent = `Poprawna odpowiedź: "${correctTranslation}"`;
+            feedbackBoxEl.classList.remove('hidden');
+        }
+
+
+        /**
+         * Aktualizuje wyświetlanie statystyk na ekranie.
+         */
+        function updateStats() {
+            scoreDisplayEl.textContent = `${score} / ${total}`;
+            remainingDisplayEl.textContent = remainingWords.length;
+        }
+
+        /**
+         * Uruchamia następną fiszkę po odpowiedzi użytkownika.
+         */
+        function nextFlashcard() {
+            setTimeout(() => {
+                document.getElementById('check-button').disabled = false;
+                document.querySelectorAll('.multi-choice-btn').forEach(btn => btn.disabled = false);
+
+                getNextQuestion();
+                feedbackBoxEl.classList.add('hidden');
+                userInputEl.value = '';
+                userInputEl.focus();
+            }, 1500); // 1.5 sekundy opóźnienia
+        }
+
+        /**
+         * Pokazuje ekran końcowy.
+         */
+        function showFinishScreen() {
+            const percentage = total > 0 ? ((score / total) * 100).toFixed(0) : 0;
+            finalScoreEl.textContent = `${score} / ${total} (${percentage}%)`;
+            quizContainerEl.classList.add('hidden');
+            finishMessageEl.classList.remove('hidden');
+            // Zmieniamy funkcję restartu na setQuizMode(currentModeName), żeby resetowało tylko bieżącą pulę
+            document.querySelector('#finish-message button').onclick = () => setQuizMode(currentModeName);
+        }
+
+        /**
+         * Inicjalizuje lub resetuje quiz.
+         */
+        function initializeQuiz() {
+            remainingWords = [...WORDS_PL]; 
+            score = 0;
+            total = 0;
+            
+            finishMessageEl.classList.add('hidden');
+            quizContainerEl.classList.remove('hidden');
+            feedbackBoxEl.classList.add('hidden');
+            document.getElementById('check-button').disabled = false;
+            
+            if (remainingWords.length > 0) {
+                 getNextQuestion();
+            } else {
+                 currentWordEl.textContent = "Brak słówek w tej sekcji!";
+            }
+            
+            userInputEl.value = '';
+            userInputEl.focus();
+            updateStats();
+        }
+        
+        // Funkcja do zresetowania przez przycisk końcowy
+        window.restartQuiz = initializeQuiz;
+
+
+        // Ustawienie głównego słuchacza zdarzeń
+        answerFormEl.addEventListener('submit', handleInputSubmit);
+
+        // Start aplikacji po załadowaniu
+        window.onload = () => setQuizMode('words'); // Uruchamia tryb "words" przy starcie
+    </script>
+</body>
+</html>
