@@ -537,6 +537,8 @@
             testSummary.classList.add('hidden');
             testControls.classList.remove('hidden');
             if (testCards.length > 0) {
+                // Ensure input is enabled if test starts successfully
+                testInput.disabled = false;
                 displayTestCard();
             } else {
                 testCardText.textContent = "Brak słówek do testowania. Dodaj słówka do słowniczka.";
@@ -554,6 +556,10 @@
             testCardText.textContent = isFront ? card.front : card.back;
             testInput.value = '';
             testResult.textContent = '';
+            
+            // Włącz pole wprowadzania dla nowego pytania
+            testInput.disabled = false; 
+            
             testCheckBtn.disabled = false;
             testNextBtn.disabled = true;
             testCardCountDisplay.textContent = `Pytanie ${currentTestCardIndex + 1} z ${testCards.length}`;
@@ -573,6 +579,10 @@
                 testResult.className = "mt-2 text-center font-medium text-red-600";
             }
             answeredCards.add(currentTestCardIndex);
+            
+            // Wyłącz pole wprowadzania po sprawdzeniu odpowiedzi
+            testInput.disabled = true; 
+
             testCheckBtn.disabled = true;
             testNextBtn.disabled = false;
         });
