@@ -1,8 +1,28 @@
 # Fiszki - Language Learning App
 
-A web application for learning foreign language words through flashcards and interactive tests.
+A web application for learning foreign language words through flashcards and interactive tests, with cloud sync and community sharing features.
 
-## Features
+## ✨ Key Features
+
+### 📱 **Offline-First with Cloud Sync**
+- Works offline - all data stored locally in IndexedDB
+- Optional cloud sync with Supabase (when logged in)
+- Automatic sync when back online
+- Queue system for offline changes
+
+### 📚 **Category Management**
+- Organize words into categories (e.g., "Unit 1", "Travel Phrases")
+- Create unlimited categories with descriptions
+- Track word counts and creation dates
+- Import/export categories as JSON
+
+### 🌍 **Shared Word Lists** ⭐ NEW
+- Share your categories publicly with the community
+- Browse public categories from other users
+- Import categories (full copy with all words)
+- Search and sort public library
+- Private by default, make public with one click
+- See badges: 🔒 Private, 🌍 Public, 📥 Imported
 
 ### 1. **Import Words**
 
@@ -65,22 +85,42 @@ Polish word | polish pronunciation | English word | english pronunciation
 ## How to Use
 
 1. **Open the App**: Open `index.html` in your web browser
-2. **Import Words**:
+2. **Sign Up (Optional)**: Create an account to enable cloud sync and sharing
+3. **Create Categories**: 
+   - Click "Manage Categories" 
+   - Create categories to organize your words
+4. **Import Words**:
    - Go to "Import Words" tab
    - Upload your CSV file OR add words manually
-3. **Study with Flashcards**:
+5. **Study with Flashcards**:
    - Go to "Flashcards" tab
    - Click cards to flip
    - Use Previous/Next to navigate
-4. **Create a Test**:
+6. **Share Your Lists** ⭐ NEW:
+   - Go to Category Management
+   - Click "🌍 Make Public" on any category
+   - Others can now import your category from the Public Library
+7. **Import from Community**:
+   - Click "🌍 Public Library" tab
+   - Browse, search, and import categories from other users
+8. **Create a Test**:
    - Go to "Create Test" tab
    - Select which words to test
    - Choose test settings (direction, type)
    - Start the test!
 
+## 🚀 Getting Started with Sharing
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for:
+- Database schema setup (one-time)
+- Testing the sharing features
+- Troubleshooting tips
+
 ## Storage
 
-All data is stored in your browser's localStorage, so your words persist between sessions.
+- **Local**: IndexedDB (offline-first, always available)
+- **Cloud**: Supabase PostgreSQL (when logged in)
+- **Sync**: Automatic bidirectional sync with conflict resolution
 
 ## Browser Compatibility
 
