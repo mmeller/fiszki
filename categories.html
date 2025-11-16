@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Fiszki</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .category-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .category-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .category-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .category-description {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .category-info {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Category Management</h1>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="app.showCreateCategoryModal()">
+                ➕ Create New Category
+            </button>
+            <button class="btn btn-success" onclick="app.showImportModal()">
+                📥 Import Category
+            </button>
+            <button class="btn btn-secondary" onclick="app.migrateOldData()">
+                🔄 Migrate Old Data
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                ← Back to App
+            </button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCategories">0</div>
+                <div class="stat-label">Total Categories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalWords">0</div>
+                <div class="stat-label">Total Words</div>
+            </div>
+        </div>
+
+        <div id="categoriesContainer">
+            <div class="loading">Loading categories...</div>
+        </div>
+    </div>
+
+    <!-- Create Category Modal -->
+    <div id="createCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Create New Category</div>
+            <form id="createCategoryForm" onsubmit="app.handleCreateCategory(event)">
+                <div class="form-group">
+                    <label class="form-label">Category Name *</label>
+                    <input type="text" class="form-input" name="name" required placeholder="e.g., Unit 1, Daily Phrases">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" name="description" placeholder="Optional description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Language 1</label>
+                    <input type="text" class="form-input" name="lang1" placeholder="e.g., Polish" value="Polish">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Language 2</label>
+                    <input type="text" class="form-input" name="lang2" placeholder="e.g., English" value="English">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="app.hideModal('createCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Category Modal -->
+    <div id="importCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Import Category</div>
+            <div class="form-group">
+                <label class="form-label">Select JSON File</label>
+                <input type="file" id="importFileInput" accept=".json" class="form-input">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="app.hideModal('importCategoryModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="app.handleImportCategory()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        class CategoryManagementApp {
+            constructor() {
+                this.db = new FlashcardDatabase();
+                this.currentCategory = null;
+            }
+
+            async init() {
+                try {
+                    await this.db.init();
+                    await this.loadCategories();
+                    await this.loadStatistics();
+                } catch (error) {
+                    console.error('Failed to initialize app:', error);
+                    alert('Failed to initialize database: ' + error.message);
+                }
+            }
+
+            async loadStatistics() {
+                const stats = await this.db.getStatistics();
+                document.getElementById('totalCategories').textContent = stats.totalCategories;
+                document.getElementById('totalWords').textContent = stats.totalWords;
+            }
+
+            async loadCategories() {
+                const container = document.getElementById('categoriesContainer');
+                const categories = await this.db.getAllCategories();
+
+                if (categories.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">No categories yet</div>
+                            <p>Create your first category to start organizing your flashcards</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="categories-grid">
+                        ${categories.map(cat => this.renderCategoryCard(cat)).join('')}
+                    </div>
+                `;
+            }
+
+            renderCategoryCard(category) {
+                const createdDate = new Date(category.createdAt).toLocaleDateString();
+                return `
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div>
+                                <div class="category-name">${this.escapeHtml(category.name)}</div>
+                                ${category.description ? `<div class="category-description">${this.escapeHtml(category.description)}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="category-info">
+                            <div class="info-item">
+                                <span>📝</span>
+                                <span>${category.wordCount} words</span>
+                            </div>
+                            <div class="info-item">
+                                <span>📅</span>
+                                <span>${createdDate}</span>
+                            </div>
+                        </div>
+                        <div class="category-info">
+                            <div class="info-item">
+                                <span>🗣️</span>
+                                <span>${category.languagePair.lang1} ↔ ${category.languagePair.lang2}</span>
+                            </div>
+                        </div>
+                        <div class="category-actions">
+                            <button class="btn btn-primary btn-small" onclick="app.viewWords(${category.id})">
+                                View Words
+                            </button>
+                            <button class="btn btn-success btn-small" onclick="app.exportCategory(${category.id})">
+                                📥 Export
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="app.deleteCategory(${category.id})">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showCreateCategoryModal() {
+                document.getElementById('createCategoryModal').classList.add('active');
+            }
+
+            showImportModal() {
+                document.getElementById('importCategoryModal').classList.add('active');
+            }
+
+            hideModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+
+            async handleCreateCategory(event) {
+                event.preventDefault();
+                const form = event.target;
+                const formData = new FormData(form);
+
+                try {
+                    await this.db.addCategory(
+                        formData.get('name'),
+                        formData.get('description'),
+                        {
+                            lang1: formData.get('lang1') || 'Language 1',
+                            lang2: formData.get('lang2') || 'Language 2'
+                        }
+                    );
+
+                    form.reset();
+                    this.hideModal('createCategoryModal');
+                    await this.loadCategories();
+                    await this.loadStatistics();
+                    alert('Category created successfully!');
+                } catch (error) {
+                    console.error('Failed to create category:', error);
+                    alert('Failed to create category: ' + error.message);
+                }
+            }
+
+            async handleImportCategory() {
+                const fileInput = document.getElementById('importFileInput');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert('Please select a file');
+                    return;
+                }
+
+                try {
+                    const text = await file.text();
+                    const jsonData = JSON.parse(text);
+
+                    await this.db.importCategoryFromJSON(jsonData);
+
+                    fileInput.value = '';
+                    this.hideModal('importCategoryModal');
+                    await this.loadCategories();
+                    await this.loadStatistics();
+                    alert(`Category "${jsonData.category.name}" imported successfully with ${jsonData.words.length} words!`);
+                } catch (error) {
+                    console.error('Failed to import category:', error);
+                    alert('Failed to import category: ' + error.message);
+                }
+            }
+
+            async exportCategory(categoryId) {
+                try {
+                    const data = await this.db.exportCategory(categoryId);
+                    const json = JSON.stringify(data, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${data.category.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Failed to export category:', error);
+                    alert('Failed to export category: ' + error.message);
+                }
+            }
+
+            async deleteCategory(categoryId) {
+                const category = await this.db.getCategory(categoryId);
+                if (!confirm(`Are you sure you want to delete "${category.name}"? This will also delete all ${category.wordCount} words in this category.`)) {
+                    return;
+                }
+
+                try {
+                    await this.db.deleteCategory(categoryId);
+                    await this.loadCategories();
+                    await this.loadStatistics();
+                    alert('Category deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete category:', error);
+                    alert('Failed to delete category: ' + error.message);
+                }
+            }
+
+            viewWords(categoryId) {
+                // Store category ID in localStorage and redirect
+                localStorage.setItem('selectedCategoryId', categoryId);
+                window.location.href = 'index.html';
+            }
+
+            async migrateOldData() {
+                if (!confirm('This will import all words from the old localStorage format into a new category. Continue?')) {
+                    return;
+                }
+
+                try {
+                    const category = await this.db.migrateFromLocalStorage();
+                    if (category) {
+                        await this.loadCategories();
+                        await this.loadStatistics();
+                        alert(`Migration successful! Created category "${category.name}" with your old words.`);
+                    } else {
+                        alert('No old data found to migrate.');
+                    }
+                } catch (error) {
+                    console.error('Failed to migrate:', error);
+                    alert('Failed to migrate data: ' + error.message);
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize app
+        const app = new CategoryManagementApp();
+        app.init();
+    </script>
+</body>
+</html>
