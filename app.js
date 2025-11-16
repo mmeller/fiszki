@@ -248,19 +248,41 @@ class FlashcardManager {
 // UI Controller
 class UIController {
     constructor() {
-        this.db = new WordDatabase();
+        this.db = new FlashcardDatabase();
+        this.currentCategoryId = null;
+        this.categories = [];
         this.flashcardManager = null;
         this.currentFlashcard = null;
         
+        this.initializeApp();
+    }
+
+    async initializeApp() {
+        await this.db.init();
+        
+        // Check if there's a selected category from categories.html
+        const savedCategoryId = localStorage.getItem('selectedCategoryId');
+        if (savedCategoryId) {
+            this.currentCategoryId = parseInt(savedCategoryId);
+            localStorage.removeItem('selectedCategoryId');
+        }
+        
         this.initializeElements();
         this.attachEventListeners();
-        this.updateUI();
+        await this.loadCategories();
+        await this.updateUI();
     }
 
     initializeElements() {
         // Tab elements
         this.tabs = document.querySelectorAll('.tab-button');
         this.tabContents = document.querySelectorAll('.tab-content');
+
+        // Category elements
+        this.categorySelect = document.getElementById('category-select');
+        this.newCategoryBtn = document.getElementById('new-category-btn');
+        this.flashcardCategoryFilter = document.getElementById('flashcard-category-filter');
+        this.testCategoryFilter = document.getElementById('test-category-filter');
 
         // Import tab elements
         this.csvFileInput = document.getElementById('csv-file');
@@ -334,6 +356,22 @@ class UIController {
             tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
         });
 
+        // Category management
+        this.categorySelect.addEventListener('change', (e) => {
+            this.currentCategoryId = e.target.value ? parseInt(e.target.value) : null;
+            this.updateUI();
+        });
+        
+        this.newCategoryBtn.addEventListener('click', () => this.createNewCategory());
+        
+        this.flashcardCategoryFilter.addEventListener('change', () => {
+            this.initializeFlashcards();
+        });
+        
+        this.testCategoryFilter.addEventListener('change', () => {
+            this.initializeTest();
+        });
+
         // Import functionality
         this.importBtn.addEventListener('click', () => this.importCSV());
         
@@ -384,6 +422,67 @@ class UIController {
         });
     }
 
+    async loadCategories() {
+        this.categories = await this.db.getAllCategories();
+        this.updateCategorySelects();
+    }
+
+    updateCategorySelects() {
+        // Update import category select
+        if (this.categories.length === 0) {
+            this.categorySelect.innerHTML = '<option value="">No categories - Create one first</option>';
+            this.categorySelect.disabled = true;
+        } else {
+            this.categorySelect.disabled = false;
+            this.categorySelect.innerHTML = this.categories.map(cat => 
+                `<option value="${cat.id}" ${this.currentCategoryId === cat.id ? 'selected' : ''}>
+                    ${cat.name} (${cat.wordCount} words)
+                </option>`
+            ).join('');
+            
+            // Select first category if none selected
+            if (!this.currentCategoryId && this.categories.length > 0) {
+                this.currentCategoryId = this.categories[0].id;
+                this.categorySelect.value = this.currentCategoryId;
+            }
+        }
+
+        // Update flashcard filter
+        this.flashcardCategoryFilter.innerHTML = '<option value="all">All Categories</option>' +
+            this.categories.map(cat => 
+                `<option value="${cat.id}">${cat.name} (${cat.wordCount} words)</option>`
+            ).join('');
+
+        // Update test filter
+        this.testCategoryFilter.innerHTML = '<option value="all">All Categories</option>' +
+            this.categories.map(cat => 
+                `<option value="${cat.id}">${cat.name} (${cat.wordCount} words)</option>`
+            ).join('');
+    }
+
+    async createNewCategory() {
+        const name = prompt('Enter category name:');
+        if (!name || !name.trim()) return;
+
+        const description = prompt('Enter description (optional):') || '';
+        const lang1 = prompt('Language 1 name:', 'Language 1') || 'Language 1';
+        const lang2 = prompt('Language 2 name:', 'Language 2') || 'Language 2';
+
+        try {
+            const category = await this.db.addCategory(name, description, { lang1, lang2 });
+            this.currentCategoryId = category.id;
+            await this.loadCategories();
+            await this.updateUI();
+            this.showStatus(`Category "${name}" created successfully!`, 'success');
+        } catch (error) {
+            if (error.message.includes('unique')) {
+                this.showStatus('A category with this name already exists.', 'error');
+            } else {
+                this.showStatus('Failed to create category: ' + error.message, 'error');
+            }
+        }
+    }
+
     switchTab(tabName) {
         // Update active tab button
         this.tabs.forEach(tab => {
@@ -414,6 +513,11 @@ class UIController {
     }
 
     importCSV() {
+        if (!this.currentCategoryId) {
+            this.showStatus('Please select or create a category first.', 'error');
+            return;
+        }
+
         const file = this.csvFileInput.files[0];
         if (!file) {
             this.showStatus('Please select a CSV file first.', 'error');
@@ -421,7 +525,7 @@ class UIController {
         }
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const csvText = e.target.result;
                 const words = CSVParser.parse(csvText);
@@ -431,9 +535,10 @@ class UIController {
                     return;
                 }
 
-                this.db.importWords(words);
+                await this.db.importWordsToCategory(this.currentCategoryId, words);
                 this.showStatus(`Successfully imported ${words.length} word pairs!`, 'success');
-                this.updateUI();
+                await this.loadCategories();
+                await this.updateUI();
                 this.csvFileInput.value = '';
             } catch (error) {
                 this.showStatus(`Error parsing CSV: ${error.message}`, 'error');
@@ -443,6 +548,11 @@ class UIController {
     }
 
     addWordManually() {
+        if (!this.currentCategoryId) {
+            this.showStatus('Please select or create a category first.', 'error');
+            return;
+        }
+
         const word1 = this.word1Input.value.trim();
         const word2 = this.word2Input.value.trim();
 
@@ -454,23 +564,54 @@ class UIController {
         const pronunciation1 = this.pronunciation1Input.value.trim();
         const pronunciation2 = this.pronunciation2Input.value.trim();
 
-        this.db.addWord(word1, pronunciation1, word2, pronunciation2);
-        this.showStatus('Word pair added successfully!', 'success');
-        
-        // Clear inputs
-        this.word1Input.value = '';
-        this.pronunciation1Input.value = '';
-        this.word2Input.value = '';
-        this.pronunciation2Input.value = '';
+        this.db.addWord(this.currentCategoryId, word1, pronunciation1, word2, pronunciation2)
+            .then(() => {
+                this.showStatus('Word pair added successfully!', 'success');
+                
+                // Clear inputs
+                this.word1Input.value = '';
+                this.pronunciation1Input.value = '';
+                this.word2Input.value = '';
+                this.pronunciation2Input.value = '';
 
-        this.updateUI();
+                return this.loadCategories();
+            })
+            .then(() => this.updateUI());
     }
 
     clearDatabase() {
-        if (confirm('Are you sure you want to delete all words? This cannot be undone.')) {
-            this.db.clearAll();
-            this.showStatus('All words have been deleted.', 'success');
-            this.updateUI();
+        if (!this.currentCategoryId) {
+            if (confirm('Are you sure you want to delete ALL categories and words? This cannot be undone.')) {
+                this.db.clearAllData()
+                    .then(() => {
+                        this.showStatus('All data has been deleted.', 'success');
+                        this.currentCategoryId = null;
+                        return this.loadCategories();
+                    })
+                    .then(() => this.updateUI());
+            }
+        } else {
+            this.db.getCategory(this.currentCategoryId)
+                .then(category => {
+                    if (confirm(`Are you sure you want to delete all words in "${category.name}"? This cannot be undone.`)) {
+                        return this.db.deleteWordsByCategory(this.currentCategoryId);
+                    }
+                })
+                .then(() => {
+                    if (this.currentCategoryId) {
+                        return this.db.updateCategoryWordCount(this.currentCategoryId);
+                    }
+                })
+                .then(() => {
+                    this.showStatus('All words in category have been deleted.', 'success');
+                    return this.loadCategories();
+                })
+                .then(() => this.updateUI())
+                .catch(err => {
+                    if (err) {
+                        console.error('Error deleting words:', err);
+                    }
+                });
         }
     }
 
@@ -483,12 +624,29 @@ class UIController {
         }, 5000);
     }
 
-    updateUI() {
-        this.wordCountEl.textContent = this.db.getWordCount();
+    async updateUI() {
+        if (this.currentCategoryId) {
+            const words = await this.db.getWordsByCategory(this.currentCategoryId);
+            this.wordCountEl.textContent = words.length;
+        } else {
+            const stats = await this.db.getStatistics();
+            this.wordCountEl.textContent = stats.totalWords;
+        }
     }
 
-    initializeFlashcards() {
-        const words = this.db.getAllWords();
+    async initializeFlashcards() {
+        const filterValue = this.flashcardCategoryFilter.value;
+        let words;
+
+        if (filterValue === 'all') {
+            // Get all words from all categories
+            const allCategories = await this.db.getAllCategories();
+            const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
+            const wordArrays = await Promise.all(wordPromises);
+            words = wordArrays.flat();
+        } else {
+            words = await this.db.getWordsByCategory(parseInt(filterValue));
+        }
         
         if (words.length === 0) {
             this.noWordsMessage.classList.remove('hidden');
@@ -544,8 +702,12 @@ class UIController {
         }
     }
 
-    renderWordList() {
-        const words = this.db.getAllWords();
+    async renderWordList() {
+        // Get all words from all categories
+        const allCategories = await this.db.getAllCategories();
+        const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
+        const wordArrays = await Promise.all(wordPromises);
+        const words = wordArrays.flat();
         
         if (words.length === 0) {
             this.noWordsListMessage.classList.remove('hidden');
@@ -569,8 +731,19 @@ class UIController {
         `).join('');
     }
 
-    initializeTest() {
-        const words = this.db.getAllWords();
+    async initializeTest() {
+        const filterValue = this.testCategoryFilter.value;
+        let words;
+
+        if (filterValue === 'all') {
+            // Get all words from all categories
+            const allCategories = await this.db.getAllCategories();
+            const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
+            const wordArrays = await Promise.all(wordPromises);
+            words = wordArrays.flat();
+        } else {
+            words = await this.db.getWordsByCategory(parseInt(filterValue));
+        }
         
         if (words.length === 0) {
             this.noWordsTestMessage.classList.remove('hidden');
@@ -581,12 +754,10 @@ class UIController {
         this.noWordsTestMessage.classList.add('hidden');
         this.testConfigArea.classList.remove('hidden');
 
-        this.renderWordSelectionList();
+        this.renderWordSelectionList(words);
     }
 
-    renderWordSelectionList() {
-        const words = this.db.getAllWords();
-        
+    renderWordSelectionList(words) {
         this.wordSelectionList.innerHTML = words.map(word => `
             <div class="word-select-item">
                 <input type="checkbox" class="word-checkbox" data-word-id="${word.id}" checked />
@@ -614,7 +785,7 @@ class UIController {
         checkboxes.forEach(cb => cb.checked = false);
     }
 
-    startTest() {
+    async startTest() {
         const allCheckboxes = document.querySelectorAll('.word-checkbox');
         const checkedCheckboxes = document.querySelectorAll('.word-checkbox:checked');
         
@@ -629,7 +800,20 @@ class UIController {
         }
 
         const selectedIds = Array.from(checkedCheckboxes).map(cb => parseFloat(cb.dataset.wordId));
-        const allWords = this.db.getAllWords();
+        
+        // Get words from the filtered category
+        const filterValue = this.testCategoryFilter.value;
+        let allWords;
+
+        if (filterValue === 'all') {
+            const allCategories = await this.db.getAllCategories();
+            const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
+            const wordArrays = await Promise.all(wordPromises);
+            allWords = wordArrays.flat();
+        } else {
+            allWords = await this.db.getWordsByCategory(parseInt(filterValue));
+        }
+
         const selectedWords = allWords.filter(word => selectedIds.includes(word.id));
 
         const direction = document.querySelector('input[name="test-direction"]:checked').value;
@@ -930,5 +1114,5 @@ class TestManager {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    new UIController();
+    const ui = new UIController();
 });
