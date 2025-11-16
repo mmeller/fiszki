@@ -383,8 +383,8 @@ class UIController {
         });
 
         // Word list management
-        this.selectAllWordsBtn.addEventListener('click', () => this.selectAllWords());
-        this.deselectAllWordsBtn.addEventListener('click', () => this.deselectAllWords());
+        this.selectAllWordsBtn.addEventListener('click', () => this.selectAllWordsList());
+        this.deselectAllWordsBtn.addEventListener('click', () => this.deselectAllWordsList());
         this.deleteSelectedWordsBtn.addEventListener('click', () => this.deleteSelectedWords());
 
         // Import functionality
@@ -772,13 +772,13 @@ class UIController {
         this.updateSelectedCount();
     }
 
-    selectAllWords() {
+    selectAllWordsList() {
         const checkboxes = document.querySelectorAll('.word-list-checkbox');
         checkboxes.forEach(cb => cb.checked = true);
         this.updateSelectedCount();
     }
 
-    deselectAllWords() {
+    deselectAllWordsList() {
         const checkboxes = document.querySelectorAll('.word-list-checkbox');
         checkboxes.forEach(cb => cb.checked = false);
         this.updateSelectedCount();
