@@ -248,7 +248,13 @@ class FlashcardManager {
 // UI Controller
 class UIController {
     constructor() {
-        this.db = new FlashcardDatabase();
+        // Initialize databases
+        this.localDb = new FlashcardDatabase();
+        this.supabaseDb = null;
+        this.syncManager = null;
+        this.db = null; // Will be set to syncManager after initialization
+        
+        this.currentUser = null;
         this.currentCategoryId = null;
         this.categories = [];
         this.flashcardManager = null;
@@ -258,7 +264,14 @@ class UIController {
     }
 
     async initializeApp() {
-        await this.db.init();
+        // Initialize local database
+        await this.localDb.init();
+        
+        // Initialize Supabase if configured
+        await this.initializeAuth();
+        
+        // Initialize sync manager
+        await this.initializeSyncManager();
         
         // Check if there's a selected category from categories.html
         const savedCategoryId = localStorage.getItem('selectedCategoryId');
@@ -271,6 +284,169 @@ class UIController {
         this.attachEventListeners();
         await this.loadCategories();
         await this.updateUI();
+    }
+    
+    async initializeAuth() {
+        // Check if Supabase is configured
+        if (typeof SUPABASE_CONFIG === 'undefined' || 
+            SUPABASE_CONFIG.url === 'YOUR_SUPABASE_URL') {
+            console.log('Supabase not configured, using offline mode');
+            this.updateAuthUI(false);
+            return;
+        }
+        
+        try {
+            // Initialize Supabase database
+            this.supabaseDb = new SupabaseFlashcardDatabase(
+                SUPABASE_CONFIG.url,
+                SUPABASE_CONFIG.anonKey
+            );
+            
+            // Check if user is signed in
+            this.currentUser = await this.supabaseDb.getCurrentUser();
+            this.updateAuthUI(!!this.currentUser);
+            
+            // Set up sign out handler
+            const signOutBtn = document.getElementById('signout-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', async () => {
+                    await this.handleSignOut();
+                });
+            }
+        } catch (error) {
+            console.error('Failed to initialize Supabase:', error);
+            this.updateAuthUI(false);
+        }
+    }
+    
+    async initializeSyncManager() {
+        // Determine sync mode
+        let syncMode = localStorage.getItem('syncMode') || SYNC_CONFIG.mode || 'offline-only';
+        
+        // If user is not signed in, force offline-only mode
+        if (!this.currentUser) {
+            syncMode = 'offline-only';
+        }
+        
+        // Initialize sync manager
+        this.syncManager = new HybridSyncManager(
+            this.localDb,
+            this.supabaseDb,
+            syncMode
+        );
+        
+        // Use sync manager as the main database interface
+        this.db = this.syncManager;
+        
+        // Set up sync mode selector
+        this.setupSyncModeSelector();
+        
+        // Set up sync status updates
+        this.setupSyncStatusListener();
+    }
+    
+    setupSyncModeSelector() {
+        const selector = document.getElementById('sync-mode-select');
+        const container = document.getElementById('sync-mode-selector');
+        
+        if (!selector || !container) return;
+        
+        // Show selector only if user is signed in
+        if (this.currentUser) {
+            container.style.display = 'block';
+            selector.value = this.syncManager.syncMode;
+            
+            selector.addEventListener('change', (e) => {
+                const newMode = e.target.value;
+                this.syncManager.setSyncMode(newMode);
+                localStorage.setItem('syncMode', newMode);
+                this.updateSyncStatus('synced');
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
+    
+    setupSyncStatusListener() {
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            this.updateSyncStatus('synced');
+            if (this.syncManager && this.syncManager.syncMode === 'auto') {
+                this.syncManager.processSyncQueue();
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            this.updateSyncStatus('offline');
+        });
+        
+        // Initial status
+        this.updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
+    }
+    
+    updateSyncStatus(status) {
+        const statusEl = document.getElementById('sync-status');
+        if (!statusEl) return;
+        
+        statusEl.className = 'sync-status';
+        
+        switch (status) {
+            case 'syncing':
+                statusEl.classList.add('syncing');
+                statusEl.title = 'Syncing...';
+                break;
+            case 'synced':
+                statusEl.title = 'Synced';
+                break;
+            case 'offline':
+                statusEl.classList.add('offline');
+                statusEl.title = 'Offline';
+                break;
+        }
+    }
+    
+    updateAuthUI(isSignedIn) {
+        const signedInEl = document.getElementById('auth-signed-in');
+        const signedOutEl = document.getElementById('auth-signed-out');
+        const userEmailEl = document.getElementById('user-email');
+        
+        if (isSignedIn && this.currentUser) {
+            signedInEl.style.display = 'flex';
+            signedOutEl.style.display = 'none';
+            if (userEmailEl) {
+                userEmailEl.textContent = this.currentUser.email;
+            }
+        } else {
+            signedInEl.style.display = 'none';
+            signedOutEl.style.display = 'block';
+        }
+    }
+    
+    async handleSignOut() {
+        if (!this.supabaseDb) return;
+        
+        try {
+            await this.supabaseDb.signOut();
+            this.currentUser = null;
+            this.updateAuthUI(false);
+            
+            // Reset to offline-only mode
+            this.syncManager.setSyncMode('offline-only');
+            localStorage.setItem('syncMode', 'offline-only');
+            
+            // Hide sync mode selector
+            const container = document.getElementById('sync-mode-selector');
+            if (container) {
+                container.style.display = 'none';
+            }
+            
+            // Reload categories (will now show only local data)
+            await this.loadCategories();
+            await this.updateUI();
+        } catch (error) {
+            console.error('Sign out failed:', error);
+            alert('Failed to sign out. Please try again.');
+        }
     }
 
     initializeElements() {
@@ -490,12 +666,15 @@ class UIController {
         const lang2 = prompt('Language 2 name:', 'Language 2') || 'Language 2';
 
         try {
+            this.updateSyncStatus('syncing');
             const category = await this.db.addCategory(name, description, { lang1, lang2 });
             this.currentCategoryId = category.id;
             await this.loadCategories();
             await this.updateUI();
             this.showStatus(`Category "${name}" created successfully!`, 'success');
+            this.updateSyncStatus('synced');
         } catch (error) {
+            this.updateSyncStatus('synced');
             if (error.message.includes('unique')) {
                 this.showStatus('A category with this name already exists.', 'error');
             } else {
@@ -556,12 +735,15 @@ class UIController {
                     return;
                 }
 
+                this.updateSyncStatus('syncing');
                 await this.db.importWordsToCategory(this.currentCategoryId, words);
                 this.showStatus(`Successfully imported ${words.length} word pairs!`, 'success');
                 await this.loadCategories();
                 await this.updateUI();
                 this.csvFileInput.value = '';
+                this.updateSyncStatus('synced');
             } catch (error) {
+                this.updateSyncStatus('synced');
                 this.showStatus(`Error parsing CSV: ${error.message}`, 'error');
             }
         };
@@ -585,6 +767,7 @@ class UIController {
         const pronunciation1 = this.pronunciation1Input.value.trim();
         const pronunciation2 = this.pronunciation2Input.value.trim();
 
+        this.updateSyncStatus('syncing');
         this.db.addWord(this.currentCategoryId, word1, pronunciation1, word2, pronunciation2)
             .then(() => {
                 this.showStatus('Word pair added successfully!', 'success');
@@ -597,7 +780,12 @@ class UIController {
 
                 return this.loadCategories();
             })
-            .then(() => this.updateUI());
+            .then(() => this.updateUI())
+            .then(() => this.updateSyncStatus('synced'))
+            .catch(error => {
+                this.updateSyncStatus('synced');
+                this.showStatus('Failed to add word: ' + error.message, 'error');
+            });
     }
 
     clearDatabase() {
@@ -803,6 +991,7 @@ class UIController {
         }
 
         try {
+            this.updateSyncStatus('syncing');
             const wordIds = Array.from(checkedCheckboxes).map(cb => parseInt(cb.dataset.wordId));
             
             // Delete each word
@@ -816,8 +1005,10 @@ class UIController {
             await this.renderWordList();
             
             this.showStatus(`Successfully deleted ${wordIds.length} word(s).`, 'success');
+            this.updateSyncStatus('synced');
         } catch (error) {
             console.error('Error deleting words:', error);
+            this.updateSyncStatus('synced');
             this.showStatus('Failed to delete words: ' + error.message, 'error');
         }
     }

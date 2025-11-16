@@ -5,11 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fiszki - Language Learning App</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .auth-panel {
+        position: absolute;
+        top: 20px;
+        right: 180px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 20px;
+        color: white;
+        font-size: 14px;
+      }
+      
+      .sync-status {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #48bb78;
+      }
+      
+      .sync-status.syncing {
+        background: #ed8936;
+        animation: pulse 1.5s infinite;
+      }
+      
+      .sync-status.offline {
+        background: #718096;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      .btn-auth {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+      }
+      
+      .btn-signin {
+        background: rgba(255,255,255,0.2);
+        color: white;
+      }
+      
+      .btn-signin:hover {
+        background: rgba(255,255,255,0.3);
+      }
+      
+      .btn-signout {
+        background: rgba(239, 68, 68, 0.8);
+        color: white;
+        border: none;
+      }
+      
+      .btn-signout:hover {
+        background: rgba(220, 38, 38, 0.9);
+      }
+      
+      .sync-mode-selector {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 13px;
+        z-index: 1000;
+      }
+      
+      .sync-mode-selector select {
+        margin-left: 8px;
+        padding: 4px 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
       <header>
         <h1>🎓 Fiszki - Language Learning</h1>
+        
+        <!-- Authentication Panel -->
+        <div class="auth-panel" id="auth-panel">
+          <div id="auth-signed-out" style="display: none;">
+            <a href="auth.html" class="btn-auth btn-signin">Sign In</a>
+          </div>
+          <div id="auth-signed-in" style="display: none;">
+            <div class="user-info">
+              <span class="sync-status" id="sync-status" title="Sync status"></span>
+              <span id="user-email"></span>
+            </div>
+            <button class="btn-auth btn-signout" id="signout-btn">Sign Out</button>
+          </div>
+        </div>
+        
         <a
           href="categories.html"
           class="btn btn-secondary"
@@ -471,8 +580,27 @@
         </div>
       </div>
     </div>
+    
+    <!-- Sync Mode Selector (only shown when signed in) -->
+    <div class="sync-mode-selector" id="sync-mode-selector" style="display: none;">
+      <label>
+        🔄 Sync Mode:
+        <select id="sync-mode-select">
+          <option value="auto">Auto (Immediate)</option>
+          <option value="manual">Manual</option>
+          <option value="offline-only">Offline Only</option>
+        </select>
+      </label>
+    </div>
 
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Load app scripts -->
+    <script src="config.js"></script>
     <script src="database.js"></script>
+    <script src="supabase-db.js"></script>
+    <script src="sync-manager.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
