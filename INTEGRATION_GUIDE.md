@@ -5,21 +5,25 @@ The category database system has been successfully integrated into your Fiszki a
 ## What's New
 
 ### 1. **Category Management**
+
 - Click "📚 Manage Categories" button in the header to access `categories.html`
 - Create, view, export, import, and delete categories
 - Each category has its own word list with customizable language pairs
 
 ### 2. **Import Tab - Category Selection**
+
 - Select which category to import words into
 - Create new categories on-the-fly with the "➕ New Category" button
 - Word count displayed for each category in the dropdown
 
 ### 3. **Flashcards Tab - Category Filter**
+
 - Filter flashcards by specific category or view all
 - Dropdown at the top of the flashcards tab
 - Practice words from a single category or combine all
 
 ### 4. **Test Tab - Category Filter**
+
 - Create tests from specific categories or all words
 - Filter dropdown at the top of the test tab
 - Ideal for focused practice sessions
@@ -29,17 +33,20 @@ The category database system has been successfully integrated into your Fiszki a
 ### Getting Started
 
 1. **Create Your First Category**
+
    - Open the app in your browser: `index.html`
    - Go to the Import tab
    - Click "➕ New Category"
    - Enter details (e.g., "Unit 1", "Polish-Italian")
 
 2. **Import Words**
+
    - Select your category from the dropdown
    - Upload a CSV file or add words manually
    - Words are saved to the selected category
 
 3. **Practice with Flashcards**
+
    - Go to Flashcards tab
    - Use the category filter to focus on specific topics
    - Or select "All Categories" for comprehensive review
@@ -52,7 +59,9 @@ The category database system has been successfully integrated into your Fiszki a
 ### Advanced Features
 
 #### Category Management Page
+
 Access via "📚 Manage Categories" button to:
+
 - View all categories with statistics
 - Export categories as JSON for backup/sharing
 - Import categories from JSON files
@@ -60,7 +69,9 @@ Access via "📚 Manage Categories" button to:
 - See word counts and creation dates
 
 #### Migration from Old Data
+
 If you have existing words in localStorage:
+
 1. Go to `categories.html`
 2. Click "🔄 Migrate Old Data"
 3. Your old words will be imported into a new category
@@ -76,20 +87,21 @@ The app now uses **IndexedDB** instead of localStorage:
 
 ## Key Changes from Old Version
 
-| Feature | Old Version | New Version |
-|---------|-------------|-------------|
-| Storage | localStorage (flat list) | IndexedDB (categorized) |
-| Organization | Single word list | Multiple categories |
-| Import | Add to one list | Choose category |
-| Practice | All words together | Filter by category |
-| Export | Not available | Export/import categories |
-| Language pairs | Global | Per category |
+| Feature        | Old Version              | New Version              |
+| -------------- | ------------------------ | ------------------------ |
+| Storage        | localStorage (flat list) | IndexedDB (categorized)  |
+| Organization   | Single word list         | Multiple categories      |
+| Import         | Add to one list          | Choose category          |
+| Practice       | All words together       | Filter by category       |
+| Export         | Not available            | Export/import categories |
+| Language pairs | Global                   | Per category             |
 
 ## API Changes
 
 If you're customizing the code, note these changes:
 
 ### Old Way (localStorage)
+
 ```javascript
 const db = new WordDatabase();
 db.importWords(words);
@@ -97,6 +109,7 @@ const allWords = db.getAllWords();
 ```
 
 ### New Way (IndexedDB)
+
 ```javascript
 const db = new FlashcardDatabase();
 await db.init();
@@ -128,6 +141,7 @@ const categoryWords = await db.getWordsByCategory(categoryId);
 ## Browser Compatibility
 
 Works in all modern browsers:
+
 - ✅ Chrome/Edge 24+
 - ✅ Firefox 16+
 - ✅ Safari 10+
@@ -154,6 +168,7 @@ A: Make sure category filter is set to the right category or "All Categories"
 ## Support
 
 For more details, see:
+
 - `DATABASE_README.md` - Complete API documentation
 - `categories.html` - Visual category management
 - Browser console for any errors (F12)

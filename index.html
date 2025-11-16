@@ -10,7 +10,17 @@
     <div class="container">
       <header>
         <h1>🎓 Fiszki - Language Learning</h1>
-        <a href="categories.html" class="btn btn-secondary" style="position: absolute; top: 20px; right: 20px; text-decoration: none;">📚 Manage Categories</a>
+        <a
+          href="categories.html"
+          class="btn btn-secondary"
+          style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-decoration: none;
+          "
+          >📚 Manage Categories</a
+        >
       </header>
 
       <nav class="tabs">
@@ -26,14 +36,39 @@
       <div id="import-tab" class="tab-content active">
         <div class="section">
           <h2>Import Words from CSV</h2>
-          
-          <div class="category-selector" style="margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Select Category:</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="category-select" style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+
+          <div
+            class="category-selector"
+            style="
+              margin-bottom: 20px;
+              padding: 15px;
+              background: #f7fafc;
+              border-radius: 8px;
+            "
+          >
+            <label style="display: block; margin-bottom: 10px; font-weight: 600"
+              >Select Category:</label
+            >
+            <div style="display: flex; gap: 10px; align-items: center">
+              <select
+                id="category-select"
+                style="
+                  flex: 1;
+                  padding: 10px;
+                  border: 2px solid #e2e8f0;
+                  border-radius: 8px;
+                  font-size: 14px;
+                "
+              >
                 <option value="">Loading categories...</option>
               </select>
-              <button id="new-category-btn" class="btn btn-secondary" style="white-space: nowrap;">➕ New Category</button>
+              <button
+                id="new-category-btn"
+                class="btn btn-secondary"
+                style="white-space: nowrap"
+              >
+                ➕ New Category
+              </button>
             </div>
           </div>
 
@@ -57,8 +92,11 @@
               target="_blank"
               >Unit 1</a
             >
-            <a href="https://drive.google.com/drive/folders/1S0-hq4oLpNMj__dZOqC34eq_-NZXkwli?usp=drive_link" target="_blank"
-              >Sample CSV Files</a>
+            <a
+              href="https://drive.google.com/drive/folders/1S0-hq4oLpNMj__dZOqC34eq_-NZXkwli?usp=drive_link"
+              target="_blank"
+              >Sample CSV Files</a
+            >
           </p>
 
           <div class="upload-area">
@@ -104,10 +142,29 @@
       <div id="flashcards-tab" class="tab-content">
         <div class="section">
           <h2>Flashcards</h2>
-          
-          <div class="category-filter" style="margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Filter by Category:</label>
-            <select id="flashcard-category-filter" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+
+          <div
+            class="category-filter"
+            style="
+              margin-bottom: 20px;
+              padding: 15px;
+              background: #f7fafc;
+              border-radius: 8px;
+            "
+          >
+            <label style="display: block; margin-bottom: 10px; font-weight: 600"
+              >Filter by Category:</label
+            >
+            <select
+              id="flashcard-category-filter"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            >
               <option value="all">All Categories</option>
             </select>
           </div>
@@ -159,6 +216,13 @@
       <div id="list-tab" class="tab-content">
         <div class="section">
           <h2>Word List</h2>
+          
+          <div class="category-filter" style="margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Filter by Category:</label>
+            <select id="list-category-filter" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
 
           <div id="word-list-container">
             <div id="no-words-list-message" class="message">
@@ -174,10 +238,29 @@
       <div id="test-tab" class="tab-content">
         <div class="section">
           <h2>Create a Test</h2>
-          
-          <div class="category-filter" style="margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Filter by Category:</label>
-            <select id="test-category-filter" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+
+          <div
+            class="category-filter"
+            style="
+              margin-bottom: 20px;
+              padding: 15px;
+              background: #f7fafc;
+              border-radius: 8px;
+            "
+          >
+            <label style="display: block; margin-bottom: 10px; font-weight: 600"
+              >Filter by Category:</label
+            >
+            <select
+              id="test-category-filter"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            >
               <option value="all">All Categories</option>
             </select>
           </div>

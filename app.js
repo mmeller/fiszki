@@ -283,6 +283,7 @@ class UIController {
         this.newCategoryBtn = document.getElementById('new-category-btn');
         this.flashcardCategoryFilter = document.getElementById('flashcard-category-filter');
         this.testCategoryFilter = document.getElementById('test-category-filter');
+        this.listCategoryFilter = document.getElementById('list-category-filter');
 
         // Import tab elements
         this.csvFileInput = document.getElementById('csv-file');
@@ -371,6 +372,10 @@ class UIController {
         this.testCategoryFilter.addEventListener('change', () => {
             this.initializeTest();
         });
+        
+        this.listCategoryFilter.addEventListener('change', () => {
+            this.renderWordList();
+        });
 
         // Import functionality
         this.importBtn.addEventListener('click', () => this.importCSV());
@@ -455,6 +460,12 @@ class UIController {
 
         // Update test filter
         this.testCategoryFilter.innerHTML = '<option value="all">All Categories</option>' +
+            this.categories.map(cat => 
+                `<option value="${cat.id}">${cat.name} (${cat.wordCount} words)</option>`
+            ).join('');
+
+        // Update list filter
+        this.listCategoryFilter.innerHTML = '<option value="all">All Categories</option>' +
             this.categories.map(cat => 
                 `<option value="${cat.id}">${cat.name} (${cat.wordCount} words)</option>`
             ).join('');
@@ -703,11 +714,18 @@ class UIController {
     }
 
     async renderWordList() {
-        // Get all words from all categories
-        const allCategories = await this.db.getAllCategories();
-        const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
-        const wordArrays = await Promise.all(wordPromises);
-        const words = wordArrays.flat();
+        const filterValue = this.listCategoryFilter.value;
+        let words;
+
+        if (filterValue === 'all') {
+            // Get all words from all categories
+            const allCategories = await this.db.getAllCategories();
+            const wordPromises = allCategories.map(cat => this.db.getWordsByCategory(cat.id));
+            const wordArrays = await Promise.all(wordPromises);
+            words = wordArrays.flat();
+        } else {
+            words = await this.db.getWordsByCategory(parseInt(filterValue));
+        }
         
         if (words.length === 0) {
             this.noWordsListMessage.classList.remove('hidden');

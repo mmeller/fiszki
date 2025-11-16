@@ -7,6 +7,7 @@ The Fiszki app now includes a robust category-based database system using **Inde
 ## Features
 
 ### ✨ Category Management
+
 - **Create multiple categories** for different word lists
 - **Organize by topic, difficulty, or source**
 - **Track word counts** per category
@@ -17,6 +18,7 @@ The Fiszki app now includes a robust category-based database system using **Inde
 The database uses IndexedDB with two main stores:
 
 1. **Categories Store**
+
    - id (auto-increment)
    - name (unique)
    - description
@@ -44,6 +46,7 @@ open categories.html
 ```
 
 **Features:**
+
 - **Create Category**: Add new categories with custom names and language pairs
 - **View Statistics**: See total categories and words at a glance
 - **Export/Import**: Share categories as JSON files
@@ -73,19 +76,18 @@ await db.init();
 
 ```javascript
 // Create a category
-const category = await db.addCategory(
-    'Unit 1', 
-    'Basic vocabulary', 
-    { lang1: 'Polish', lang2: 'English' }
-);
+const category = await db.addCategory("Unit 1", "Basic vocabulary", {
+  lang1: "Polish",
+  lang2: "English",
+});
 
 // Add words to category
 await db.addWord(
-    category.id,
-    'Dzień dobry',  // word1
-    '',             // pronunciation1
-    'Hello',        // word2
-    ''              // pronunciation2
+  category.id,
+  "Dzień dobry", // word1
+  "", // pronunciation1
+  "Hello", // word2
+  "" // pronunciation2
 );
 
 // Get all words from a category
@@ -101,6 +103,7 @@ await db.importWordsToCategory(category.id, parsedWords);
 ### FlashcardDatabase Class
 
 #### Initialization
+
 ```javascript
 const db = new FlashcardDatabase();
 await db.init();
@@ -109,32 +112,36 @@ await db.init();
 #### Category Methods
 
 **addCategory(name, description, languagePair)**
+
 ```javascript
-const category = await db.addCategory(
-    'Unit 1',
-    'First chapter vocabulary',
-    { lang1: 'Polish', lang2: 'Italian' }
-);
+const category = await db.addCategory("Unit 1", "First chapter vocabulary", {
+  lang1: "Polish",
+  lang2: "Italian",
+});
 ```
 
 **getAllCategories()**
+
 ```javascript
 const categories = await db.getAllCategories();
 ```
 
 **getCategory(id)**
+
 ```javascript
 const category = await db.getCategory(1);
 ```
 
 **updateCategory(id, updates)**
+
 ```javascript
-await db.updateCategory(1, { 
-    description: 'Updated description' 
+await db.updateCategory(1, {
+  description: "Updated description",
 });
 ```
 
 **deleteCategory(id)**
+
 ```javascript
 await db.deleteCategory(1); // Also deletes all words
 ```
@@ -142,33 +149,37 @@ await db.deleteCategory(1); // Also deletes all words
 #### Word Methods
 
 **addWord(categoryId, word1, pronunciation1, word2, pronunciation2)**
+
 ```javascript
 await db.addWord(
-    1,                    // categoryId
-    'Dzień dobry',       // word1
-    'jen dob-ri',        // pronunciation1
-    'Buongiorno',        // word2
-    'bwon-jor-no'        // pronunciation2
+  1, // categoryId
+  "Dzień dobry", // word1
+  "jen dob-ri", // pronunciation1
+  "Buongiorno", // word2
+  "bwon-jor-no" // pronunciation2
 );
 ```
 
 **getWordsByCategory(categoryId)**
+
 ```javascript
 const words = await db.getWordsByCategory(1);
 ```
 
 **importWordsToCategory(categoryId, wordPairs)**
+
 ```javascript
 const wordPairs = [
-    {
-        lang1: { word: 'Hello', pronunciation: '' },
-        lang2: { word: 'Ciao', pronunciation: 'chao' }
-    }
+  {
+    lang1: { word: "Hello", pronunciation: "" },
+    lang2: { word: "Ciao", pronunciation: "chao" },
+  },
 ];
 await db.importWordsToCategory(1, wordPairs);
 ```
 
 **deleteWord(id)**
+
 ```javascript
 await db.deleteWord(wordId);
 ```
@@ -176,20 +187,24 @@ await db.deleteWord(wordId);
 #### Export/Import
 
 **exportCategory(categoryId)**
+
 ```javascript
 const exportData = await db.exportCategory(1);
 // Returns JSON object ready for download
 ```
 
 **importCategoryFromJSON(jsonData)**
+
 ```javascript
 const jsonData = {
-    category: {
-        name: 'Imported Category',
-        description: 'From backup',
-        languagePair: { lang1: 'Polish', lang2: 'English' }
-    },
-    words: [/* word pairs */]
+  category: {
+    name: "Imported Category",
+    description: "From backup",
+    languagePair: { lang1: "Polish", lang2: "English" },
+  },
+  words: [
+    /* word pairs */
+  ],
 };
 const newCategory = await db.importCategoryFromJSON(jsonData);
 ```
@@ -197,18 +212,21 @@ const newCategory = await db.importCategoryFromJSON(jsonData);
 #### Utility Methods
 
 **getStatistics()**
+
 ```javascript
 const stats = await db.getStatistics();
 // Returns: { totalCategories, totalWords, categories: [...] }
 ```
 
 **migrateFromLocalStorage()**
+
 ```javascript
 const migratedCategory = await db.migrateFromLocalStorage();
 // Imports old localStorage data into a new category
 ```
 
 **clearAllData()**
+
 ```javascript
 await db.clearAllData();
 // WARNING: Deletes everything!
@@ -272,15 +290,15 @@ await db.init();
 
 // 2. Create categories for different topics
 const unit1 = await db.addCategory(
-    'Unit 1 - Greetings',
-    'Basic greetings and courtesy phrases',
-    { lang1: 'Polish', lang2: 'Italian' }
+  "Unit 1 - Greetings",
+  "Basic greetings and courtesy phrases",
+  { lang1: "Polish", lang2: "Italian" }
 );
 
 const mythology = await db.addCategory(
-    'Greek Mythology',
-    'Names of Greek gods and goddesses',
-    { lang1: 'English', lang2: 'Greek' }
+  "Greek Mythology",
+  "Names of Greek gods and goddesses",
+  { lang1: "English", lang2: "Greek" }
 );
 
 // 3. Import words from CSV
@@ -294,7 +312,7 @@ const words = await db.getWordsByCategory(unit1.id);
 
 // 5. Export for backup
 const exportData = await db.exportCategory(unit1.id);
-downloadAsJSON(exportData, 'unit1_backup.json');
+downloadAsJSON(exportData, "unit1_backup.json");
 ```
 
 ## Benefits Over localStorage
@@ -309,6 +327,7 @@ downloadAsJSON(exportData, 'unit1_backup.json');
 ## Browser Compatibility
 
 IndexedDB is supported in all modern browsers:
+
 - Chrome 24+
 - Firefox 16+
 - Safari 10+
