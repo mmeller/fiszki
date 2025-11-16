@@ -555,25 +555,44 @@
 
         async init() {
           try {
+            console.log("🚀 Starting categories page initialization...");
+
             // Initialize local database
             await this.localDb.init();
+            console.log("✅ Local DB initialized");
 
             // Initialize Supabase if configured
+            console.log("🔍 Checking Supabase config...");
+
             if (
+              typeof SUPABASE_CONFIG !== "undefined" &&
               SUPABASE_CONFIG.url !== "YOUR_SUPABASE_URL" &&
               SUPABASE_CONFIG.anonKey !== "YOUR_SUPABASE_ANON_KEY"
             ) {
               try {
-                this.supabaseDb = new SupabaseDB(
+                console.log("🔄 Initializing Supabase...");
+
+                // Check if SupabaseFlashcardDatabase is available
+                if (typeof SupabaseFlashcardDatabase === "undefined") {
+                  throw new Error("SupabaseFlashcardDatabase class not loaded");
+                }
+
+                this.supabaseDb = new SupabaseFlashcardDatabase(
                   SUPABASE_CONFIG.url,
                   SUPABASE_CONFIG.anonKey
                 );
+                console.log("✅ SupabaseFlashcardDatabase created");
+
                 this.syncManager = new HybridSyncManager(
                   this.localDb,
                   this.supabaseDb,
                   SYNC_CONFIG
                 );
+                console.log("✅ HybridSyncManager created");
+
                 await this.syncManager.init();
+                console.log("✅ HybridSyncManager initialized");
+
                 this.db = this.syncManager;
                 console.log(
                   "✅ Categories page: Using HybridSyncManager with Supabase"
@@ -590,6 +609,7 @@
               this.db = this.localDb;
             }
 
+            console.log("📊 Final this.db:", this.db.constructor.name);
             await this.loadCategories();
             await this.loadStatistics();
           } catch (error) {
@@ -742,7 +762,13 @@
           const formData = new FormData(form);
 
           try {
-            await this.db.addCategory(
+            console.log("🔍 Using database:", this.db.constructor.name);
+            console.log(
+              "🔍 Is HybridSyncManager?",
+              this.db === this.syncManager
+            );
+
+            const category = await this.db.addCategory(
               formData.get("name"),
               formData.get("description"),
               {
@@ -750,6 +776,9 @@
                 lang2: formData.get("lang2") || "Language 2",
               }
             );
+
+            console.log("✅ Category created:", category);
+            console.log("☁️ Should sync to cloud if HybridSyncManager");
 
             form.reset();
             this.hideModal("createCategoryModal");
