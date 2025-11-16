@@ -1,6 +1,5 @@
 # Supabase configuration (contains API keys)
-# Uncomment the line below if you want to prevent committing your credentials
-# config.js
+config.js
 
 # macOS
 .DS_Store
