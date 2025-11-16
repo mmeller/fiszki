@@ -539,16 +539,43 @@
     </div>
 
     <script src="database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="supabase-db.js"></script>
+    <script src="sync-manager.js"></script>
     <script>
       class CategoryManagementApp {
         constructor() {
-          this.db = new FlashcardDatabase();
+          this.localDb = new FlashcardDatabase();
+          this.supabaseDb = null;
+          this.syncManager = null;
+          this.db = null; // Will be set to syncManager or localDb
           this.currentCategory = null;
         }
 
         async init() {
           try {
-            await this.db.init();
+            // Initialize local database
+            await this.localDb.init();
+            
+            // Initialize Supabase if configured
+            if (SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL' && 
+                SUPABASE_CONFIG.anonKey !== 'YOUR_SUPABASE_ANON_KEY') {
+                try {
+                    this.supabaseDb = new SupabaseDB(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                    this.syncManager = new HybridSyncManager(this.localDb, this.supabaseDb, SYNC_CONFIG);
+                    await this.syncManager.init();
+                    this.db = this.syncManager;
+                    console.log('✅ Categories page: Using HybridSyncManager with Supabase');
+                } catch (error) {
+                    console.warn('⚠️ Supabase initialization failed, using local-only mode:', error);
+                    this.db = this.localDb;
+                }
+            } else {
+                console.log('ℹ️ Supabase not configured, using local-only mode');
+                this.db = this.localDb;
+            }
+            
             await this.loadCategories();
             await this.loadStatistics();
           } catch (error) {
