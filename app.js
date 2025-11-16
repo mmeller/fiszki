@@ -316,6 +316,11 @@ class UIController {
         // Word list elements
         this.wordList = document.getElementById('word-list');
         this.noWordsListMessage = document.getElementById('no-words-list-message');
+        this.wordListActions = document.getElementById('word-list-actions');
+        this.selectAllWordsBtn = document.getElementById('select-all-words-btn');
+        this.deselectAllWordsBtn = document.getElementById('deselect-all-words-btn');
+        this.deleteSelectedWordsBtn = document.getElementById('delete-selected-words-btn');
+        this.selectedCountEl = document.getElementById('selected-count');
 
         // Test elements
         this.testSetup = document.getElementById('test-setup');
@@ -376,6 +381,11 @@ class UIController {
         this.listCategoryFilter.addEventListener('change', () => {
             this.renderWordList();
         });
+
+        // Word list management
+        this.selectAllWordsBtn.addEventListener('click', () => this.selectAllWords());
+        this.deselectAllWordsBtn.addEventListener('click', () => this.deselectAllWords());
+        this.deleteSelectedWordsBtn.addEventListener('click', () => this.deleteSelectedWords());
 
         // Import functionality
         this.importBtn.addEventListener('click', () => this.importCSV());
@@ -729,24 +739,87 @@ class UIController {
         
         if (words.length === 0) {
             this.noWordsListMessage.classList.remove('hidden');
+            this.wordListActions.classList.add('hidden');
             this.wordList.innerHTML = '';
             return;
         }
 
         this.noWordsListMessage.classList.add('hidden');
+        this.wordListActions.classList.remove('hidden');
         
         this.wordList.innerHTML = words.map(word => `
-            <div class="word-item">
-                <div class="word-column">
-                    <div class="word">${word.lang1.word}</div>
-                    ${word.lang1.pronunciation ? `<div class="pronunciation">${word.lang1.pronunciation}</div>` : ''}
-                </div>
-                <div class="word-column">
-                    <div class="word">${word.lang2.word}</div>
-                    ${word.lang2.pronunciation ? `<div class="pronunciation">${word.lang2.pronunciation}</div>` : ''}
+            <div class="word-item" style="display: flex; align-items: center; gap: 15px;">
+                <input type="checkbox" class="word-list-checkbox" data-word-id="${word.id}" style="cursor: pointer; width: 18px; height: 18px;" />
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <div class="word-column">
+                        <div class="word">${word.lang1.word}</div>
+                        ${word.lang1.pronunciation ? `<div class="pronunciation">${word.lang1.pronunciation}</div>` : ''}
+                    </div>
+                    <div class="word-column">
+                        <div class="word">${word.lang2.word}</div>
+                        ${word.lang2.pronunciation ? `<div class="pronunciation">${word.lang2.pronunciation}</div>` : ''}
+                    </div>
                 </div>
             </div>
         `).join('');
+
+        // Add event listeners to checkboxes
+        const checkboxes = document.querySelectorAll('.word-list-checkbox');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => this.updateSelectedCount());
+        });
+
+        this.updateSelectedCount();
+    }
+
+    selectAllWords() {
+        const checkboxes = document.querySelectorAll('.word-list-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+        this.updateSelectedCount();
+    }
+
+    deselectAllWords() {
+        const checkboxes = document.querySelectorAll('.word-list-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        this.updateSelectedCount();
+    }
+
+    updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.word-list-checkbox');
+        const checkedCount = document.querySelectorAll('.word-list-checkbox:checked').length;
+        this.selectedCountEl.textContent = checkedCount > 0 ? `${checkedCount} selected` : '';
+    }
+
+    async deleteSelectedWords() {
+        const checkedCheckboxes = document.querySelectorAll('.word-list-checkbox:checked');
+        
+        if (checkedCheckboxes.length === 0) {
+            alert('Please select at least one word to delete.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete ${checkedCheckboxes.length} word(s)? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const wordIds = Array.from(checkedCheckboxes).map(cb => parseInt(cb.dataset.wordId));
+            
+            // Delete each word
+            for (const wordId of wordIds) {
+                await this.db.deleteWord(wordId);
+            }
+
+            // Reload categories and re-render
+            await this.loadCategories();
+            await this.updateUI();
+            await this.renderWordList();
+            
+            this.showStatus(`Successfully deleted ${wordIds.length} word(s).`, 'success');
+        } catch (error) {
+            console.error('Error deleting words:', error);
+            this.showStatus('Failed to delete words: ' + error.message, 'error');
+        }
     }
 
     async initializeTest() {
