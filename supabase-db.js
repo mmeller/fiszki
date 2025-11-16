@@ -378,6 +378,190 @@ class SupabaseFlashcardDatabase {
 
         if (error) throw error;
     }
+
+    // Visibility Management
+    async setCategoryVisibility(categoryId, visibility) {
+        if (!this.currentUser) {
+            throw new Error('User must be authenticated');
+        }
+
+        const { data, error } = await this.supabase
+            .from('categories')
+            .update({ 
+                visibility,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', categoryId)
+            .eq('user_id', this.currentUser.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        
+        // Transform to match local format
+        return this._transformCategory(data);
+    }
+
+    // Get public categories
+    async getPublicCategories(page = 1, limit = 20, sortBy = 'recent') {
+        const offset = (page - 1) * limit;
+        
+        let query = this.supabase
+            .from('public_categories')
+            .select('*');
+
+        // Apply sorting
+        switch (sortBy) {
+            case 'recent':
+                query = query.order('created_at', { ascending: false });
+                break;
+            case 'alphabetical':
+                query = query.order('name', { ascending: true });
+                break;
+            default:
+                query = query.order('created_at', { ascending: false });
+        }
+
+        query = query.range(offset, offset + limit - 1);
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        
+        return data.map(cat => ({
+            id: cat.id,
+            userId: cat.user_id,
+            name: cat.name,
+            description: cat.description,
+            languagePair: { lang1: cat.lang1, lang2: cat.lang2 },
+            visibility: 'public',
+            createdAt: cat.created_at,
+            wordCount: cat.word_count,
+            isImportedByMe: cat.is_imported_by_me
+        }));
+    }
+
+    // Search public categories
+    async searchPublicCategories(query) {
+        const { data, error } = await this.supabase
+            .from('public_categories')
+            .select('*')
+            .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        return data.map(cat => ({
+            id: cat.id,
+            userId: cat.user_id,
+            name: cat.name,
+            description: cat.description,
+            languagePair: { lang1: cat.lang1, lang2: cat.lang2 },
+            visibility: 'public',
+            createdAt: cat.created_at,
+            wordCount: cat.word_count,
+            isImportedByMe: cat.is_imported_by_me
+        }));
+    }
+
+    // Import a public category
+    async importCategory(originalCategoryId) {
+        if (!this.currentUser) {
+            throw new Error('User must be authenticated');
+        }
+
+        // Check if already imported
+        const { data: existing } = await this.supabase
+            .from('category_imports')
+            .select('*')
+            .eq('original_category_id', originalCategoryId)
+            .eq('imported_by_user_id', this.currentUser.id)
+            .single();
+
+        if (existing) {
+            throw new Error('Category already imported');
+        }
+
+        // Get the original category
+        const { data: originalCategory, error: catError } = await this.supabase
+            .from('categories')
+            .select('*')
+            .eq('id', originalCategoryId)
+            .single();
+
+        if (catError) throw catError;
+
+        // Create a copy in user's collection
+        const { data: newCategory, error: createError } = await this.supabase
+            .from('categories')
+            .insert({
+                user_id: this.currentUser.id,
+                name: originalCategory.name,
+                description: originalCategory.description,
+                lang1: originalCategory.lang1,
+                lang2: originalCategory.lang2,
+                visibility: 'private', // Imported categories start as private
+            })
+            .select()
+            .single();
+
+        if (createError) throw createError;
+
+        // Get all words from original category
+        const { data: words, error: wordsError } = await this.supabase
+            .from('words')
+            .select('*')
+            .eq('category_id', originalCategoryId);
+
+        if (wordsError) throw wordsError;
+
+        // Copy words to new category
+        if (words.length > 0) {
+            const newWords = words.map(word => ({
+                category_id: newCategory.id,
+                user_id: this.currentUser.id,
+                word1: word.word1,
+                pronunciation1: word.pronunciation1,
+                word2: word.word2,
+                pronunciation2: word.pronunciation2
+            }));
+
+            const { error: insertWordsError } = await this.supabase
+                .from('words')
+                .insert(newWords);
+
+            if (insertWordsError) throw insertWordsError;
+        }
+
+        // Record the import
+        const { error: importError } = await this.supabase
+            .from('category_imports')
+            .insert({
+                original_category_id: originalCategoryId,
+                imported_by_user_id: this.currentUser.id,
+                imported_category_id: newCategory.id
+            });
+
+        if (importError) throw importError;
+
+        return this._transformCategory(newCategory);
+    }
+
+    // Check if user has imported a category
+    async hasImportedCategory(categoryId) {
+        if (!this.currentUser) {
+            return false;
+        }
+
+        const { data, error } = await this.supabase
+            .from('category_imports')
+            .select('*')
+            .eq('original_category_id', categoryId)
+            .eq('imported_by_user_id', this.currentUser.id)
+            .single();
+
+        return !!data && !error;
+    }
 }
 
 // Export for use in other files

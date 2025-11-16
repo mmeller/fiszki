@@ -334,6 +334,12 @@ class HybridSyncManager {
             case 'importCategoryFromJSON':
                 await this.cloudDB.importCategoryFromJSON(params.jsonData);
                 break;
+            case 'setCategoryVisibility':
+                const cloudId = this.categoryIdMap.get(params.categoryId);
+                if (cloudId) {
+                    await this.cloudDB.setCategoryVisibility(cloudId, params.visibility);
+                }
+                break;
         }
     }
 
@@ -451,6 +457,126 @@ class HybridSyncManager {
                 console.error('Failed to clear cloud data:', error);
             }
         }
+    }
+
+    // Visibility Management
+    async setCategoryVisibility(categoryId, visibility) {
+        // Update locally
+        const category = await this.localDB.setCategoryVisibility(categoryId, visibility);
+
+        // Sync to cloud
+        if (this.syncMode !== 'offline-only' && this.cloudDB) {
+            try {
+                if (this.isOnline) {
+                    const cloudId = this.categoryIdMap.get(categoryId);
+                    if (cloudId) {
+                        await this.cloudDB.setCategoryVisibility(cloudId, visibility);
+                    }
+                } else {
+                    // Queue for later
+                    this.queueOperation({
+                        type: 'setCategoryVisibility',
+                        categoryId,
+                        visibility,
+                        timestamp: Date.now()
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to sync visibility change:', error);
+                this.queueOperation({
+                    type: 'setCategoryVisibility',
+                    categoryId,
+                    visibility,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        return category;
+    }
+
+    // Get public categories (from cloud only)
+    async getPublicCategories(page = 1, limit = 20, sortBy = 'recent') {
+        if (this.syncMode === 'offline-only' || !this.cloudDB) {
+            return [];
+        }
+
+        if (!this.isOnline) {
+            throw new Error('Cannot browse public categories while offline');
+        }
+
+        return await this.cloudDB.getPublicCategories(page, limit, sortBy);
+    }
+
+    // Search public categories
+    async searchPublicCategories(query) {
+        if (this.syncMode === 'offline-only' || !this.cloudDB) {
+            return [];
+        }
+
+        if (!this.isOnline) {
+            throw new Error('Cannot search public categories while offline');
+        }
+
+        return await this.cloudDB.searchPublicCategories(query);
+    }
+
+    // Import a public category
+    async importCategory(originalCategoryId) {
+        if (this.syncMode === 'offline-only' || !this.cloudDB) {
+            throw new Error('Cannot import categories in offline-only mode');
+        }
+
+        if (!this.isOnline) {
+            throw new Error('Cannot import categories while offline');
+        }
+
+        // Import in cloud (creates copy with all words)
+        const cloudCategory = await this.cloudDB.importCategory(originalCategoryId);
+
+        // Sync to local
+        try {
+            // Create local category
+            const localCategory = await this.localDB.addCategory(
+                cloudCategory.name,
+                cloudCategory.description,
+                cloudCategory.languagePair
+            );
+
+            // Map IDs
+            this.categoryIdMap.set(localCategory.id, cloudCategory.id);
+            this.saveCategoryIdMap();
+
+            // Get all words from cloud category
+            const words = await this.cloudDB.getWordsByCategory(cloudCategory.id);
+
+            // Import words to local
+            if (words.length > 0) {
+                await this.localDB.importWordsToCategory(localCategory.id, words);
+            }
+
+            // Record import locally
+            await this.localDB.recordCategoryImport(originalCategoryId, localCategory.id);
+
+            return localCategory;
+        } catch (error) {
+            console.error('Failed to sync imported category locally:', error);
+            throw error;
+        }
+    }
+
+    // Check if category was imported
+    async hasImportedCategory(categoryId) {
+        // Check locally first
+        const localImport = await this.localDB.hasImportedCategory(categoryId);
+        if (localImport) return true;
+
+        // Check cloud if online
+        if (this.isOnline && this.cloudDB && this.syncMode !== 'offline-only') {
+            return await this.cloudDB.hasImportedCategory(categoryId);
+        }
+
+        return false;
     }
 }
 

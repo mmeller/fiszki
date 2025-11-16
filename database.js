@@ -2,7 +2,7 @@
 class FlashcardDatabase {
     constructor() {
         this.dbName = 'FiszkiDB';
-        this.dbVersion = 1;
+        this.dbVersion = 2; // Increment version for schema changes
         this.db = null;
     }
 
@@ -18,6 +18,7 @@ class FlashcardDatabase {
 
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                const oldVersion = event.oldVersion;
 
                 // Categories store
                 if (!db.objectStoreNames.contains('categories')) {
@@ -38,6 +39,30 @@ class FlashcardDatabase {
                     wordStore.createIndex('categoryId', 'categoryId', { unique: false });
                     wordStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
+
+                // Version 2: Add visibility and import tracking
+                if (oldVersion < 2) {
+                    // Add visibility field to existing categories
+                    if (db.objectStoreNames.contains('categories')) {
+                        const transaction = event.target.transaction;
+                        const categoryStore = transaction.objectStore('categories');
+                        
+                        // Create index for visibility
+                        if (!categoryStore.indexNames.contains('visibility')) {
+                            categoryStore.createIndex('visibility', 'visibility', { unique: false });
+                        }
+                    }
+
+                    // Create category_imports store
+                    if (!db.objectStoreNames.contains('category_imports')) {
+                        const importStore = db.createObjectStore('category_imports', {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        });
+                        importStore.createIndex('originalCategoryId', 'originalCategoryId', { unique: false });
+                        importStore.createIndex('importedCategoryId', 'importedCategoryId', { unique: false });
+                    }
+                }
             };
         });
     }
@@ -51,6 +76,7 @@ class FlashcardDatabase {
             name: name.trim(),
             description: description.trim(),
             languagePair,
+            visibility: 'private', // Default to private
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             wordCount: 0
@@ -326,6 +352,81 @@ class FlashcardDatabase {
                 request.onerror = () => reject(request.error);
             })
         ]);
+    }
+
+    // Visibility Management
+    async setCategoryVisibility(categoryId, visibility) {
+        const transaction = this.db.transaction(['categories'], 'readwrite');
+        const store = transaction.objectStore('categories');
+
+        return new Promise(async (resolve, reject) => {
+            const getRequest = store.get(categoryId);
+            
+            getRequest.onsuccess = () => {
+                const category = getRequest.result;
+                if (!category) {
+                    reject(new Error('Category not found'));
+                    return;
+                }
+
+                category.visibility = visibility;
+                category.updatedAt = new Date().toISOString();
+
+                const updateRequest = store.put(category);
+                updateRequest.onsuccess = () => resolve(category);
+                updateRequest.onerror = () => reject(updateRequest.error);
+            };
+            
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+    }
+
+    // Get public categories (for browsing - in local DB this returns empty, cloud handles it)
+    async getPublicCategories() {
+        // In local-only mode, return empty array
+        // The sync manager will handle fetching from cloud
+        return [];
+    }
+
+    // Category Import Tracking
+    async recordCategoryImport(originalCategoryId, importedCategoryId) {
+        const transaction = this.db.transaction(['category_imports'], 'readwrite');
+        const store = transaction.objectStore('category_imports');
+
+        const importRecord = {
+            originalCategoryId,
+            importedCategoryId,
+            importedAt: new Date().toISOString()
+        };
+
+        return new Promise((resolve, reject) => {
+            const request = store.add(importRecord);
+            request.onsuccess = () => resolve({ ...importRecord, id: request.result });
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async hasImportedCategory(originalCategoryId) {
+        const transaction = this.db.transaction(['category_imports'], 'readonly');
+        const store = transaction.objectStore('category_imports');
+        const index = store.index('originalCategoryId');
+
+        return new Promise((resolve, reject) => {
+            const request = index.get(originalCategoryId);
+            request.onsuccess = () => resolve(!!request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getImportedCategories() {
+        const transaction = this.db.transaction(['category_imports'], 'readonly');
+        const store = transaction.objectStore('category_imports');
+
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
     }
 }
 
