@@ -13,6 +13,7 @@ This guide will walk you through setting up Supabase for the Fiszki flashcard ap
 2. Sign in or create a free account
 3. Click "New Project"
 4. Fill in the project details:
+
    - **Project Name**: fiszki-flashcards (or any name you prefer)
    - **Database Password**: Choose a strong password (save this!)
    - **Region**: Select the region closest to you
@@ -30,6 +31,7 @@ This guide will walk you through setting up Supabase for the Fiszki flashcard ap
 6. You should see a success message: "Success. No rows returned"
 
 This will create:
+
 - `categories` table for organizing flashcards
 - `words` table for storing flashcard words
 - Row Level Security (RLS) policies to protect user data
@@ -53,8 +55,8 @@ This will create:
 
 ```javascript
 const SUPABASE_CONFIG = {
-    url: 'https://xyzcompany.supabase.co', // Your Project URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' // Your anon public key
+  url: "https://xyzcompany.supabase.co", // Your Project URL
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", // Your anon public key
 };
 ```
 
@@ -64,6 +66,7 @@ const SUPABASE_CONFIG = {
 
 1. Open `auth.html` in your web browser
 2. Try creating a new account:
+
    - Enter your email and a password (minimum 6 characters)
    - Click "Sign Up"
    - Check your email for a confirmation link from Supabase
@@ -79,6 +82,7 @@ const SUPABASE_CONFIG = {
 2. Import some words to that category
 3. Open the browser's Developer Console (F12)
 4. Look for sync messages like:
+
    - "Syncing to cloud: addCategory"
    - "Cloud sync successful"
 
@@ -92,24 +96,30 @@ const SUPABASE_CONFIG = {
 The application supports three sync modes (configured in `config.js`):
 
 ### 1. Auto Mode (Recommended)
+
 ```javascript
-mode: 'auto'
+mode: "auto";
 ```
+
 - Automatically syncs all changes to the cloud immediately
 - Best for online usage with real-time sync across devices
 
 ### 2. Manual Mode
+
 ```javascript
-mode: 'manual'
+mode: "manual";
 ```
+
 - Changes are saved locally first
 - You manually trigger sync when ready
 - Good for unstable internet connections
 
 ### 3. Offline-Only Mode
+
 ```javascript
-mode: 'offline-only'
+mode: "offline-only";
 ```
+
 - No cloud sync, all data stays on your device
 - Use this if you don't want to create a Supabase account
 - Good for privacy-focused users
@@ -120,7 +130,8 @@ mode: 'offline-only'
 
 **Problem**: The app shows "Configuration missing. Please set up config.js"
 
-**Solution**: 
+**Solution**:
+
 - Make sure you've edited `config.js` with your actual Supabase credentials
 - Ensure you're using the correct URL (starts with `https://`)
 - Check that the anon key is copied correctly (it's very long!)
@@ -130,6 +141,7 @@ mode: 'offline-only'
 **Problem**: Sign in fails with an API key error
 
 **Solution**:
+
 - Double-check you copied the **anon public** key (not the service_role key)
 - Make sure there are no extra spaces before or after the key
 - Verify the Project URL matches your project
@@ -139,6 +151,7 @@ mode: 'offline-only'
 **Problem**: After signing up, no confirmation email arrives
 
 **Solution**:
+
 - Check your spam/junk folder
 - In Supabase Dashboard → Authentication → Settings:
   - Make sure "Enable email confirmations" is checked
@@ -150,6 +163,7 @@ mode: 'offline-only'
 **Problem**: Changes on one device don't appear on another
 
 **Solution**:
+
 - Check that both devices are signed in with the same account
 - Verify internet connection on both devices
 - Open browser console (F12) and look for sync errors
@@ -161,6 +175,7 @@ mode: 'offline-only'
 **Problem**: "Row Level Security policy violation" errors
 
 **Solution**:
+
 - Make sure you ran the entire `schema.sql` file
 - Verify you're signed in (RLS policies require authentication)
 - Check that the user_id column is being set correctly
@@ -168,14 +183,17 @@ mode: 'offline-only'
 ## Security Best Practices
 
 1. **Never commit `config.js` to public repositories**
+
    - Add `config.js` to `.gitignore`
    - The anon key is public-safe but should still be protected
 
 2. **Use Row Level Security (RLS)**
+
    - Already configured in `schema.sql`
    - Each user can only access their own data
 
 3. **Email Confirmation**
+
    - Keep email confirmation enabled in Supabase
    - Prevents spam accounts
 
@@ -194,11 +212,13 @@ mode: 'offline-only'
 ### Export Data
 
 1. In Supabase Dashboard → **SQL Editor**
-2. Run: 
+2. Run:
+
 ```sql
 SELECT * FROM categories WHERE user_id = auth.uid();
 SELECT * FROM words WHERE user_id = auth.uid();
 ```
+
 3. Click **Download as CSV**
 
 ### Delete All Data
@@ -213,6 +233,7 @@ DELETE FROM categories WHERE user_id = auth.uid();
 ## Cost Estimates
 
 Supabase **Free Tier** includes:
+
 - 500MB database space
 - 1GB file storage
 - 2GB bandwidth
@@ -220,10 +241,12 @@ Supabase **Free Tier** includes:
 - Unlimited API requests
 
 For a personal flashcard app, the free tier should be more than sufficient. Each word takes approximately:
+
 - Categories: ~100 bytes each
 - Words: ~200 bytes each
 
 So you could store:
+
 - ~5,000 categories
 - ~2,500,000 words
 
@@ -242,6 +265,7 @@ await syncManager.migrateLocalToCloud();
 ```
 
 This will:
+
 - Upload all your local categories to the cloud
 - Upload all your local words to the cloud
 - Preserve all data and relationships
@@ -255,6 +279,7 @@ This will:
 ## Next Steps
 
 After setup is complete:
+
 1. Read `INTEGRATION_GUIDE.md` for user documentation
 2. Read `DATABASE_README.md` for API documentation
 3. Start using the app and enjoy synced flashcards! 🎉

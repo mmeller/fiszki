@@ -1,423 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In - Fiszki</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
 
-        .auth-container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 90%;
-        }
+      .auth-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 90%;
+      }
 
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+      .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
 
-        .auth-header h1 {
-            color: #2d3748;
-            margin-bottom: 10px;
-        }
+      .auth-header h1 {
+        color: #2d3748;
+        margin-bottom: 10px;
+      }
 
-        .auth-header p {
-            color: #718096;
-            font-size: 14px;
-        }
+      .auth-header p {
+        color: #718096;
+        font-size: 14px;
+      }
 
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e2e8f0;
-        }
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #e2e8f0;
+      }
 
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: #718096;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
+      .tab-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        color: #718096;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+      }
 
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
+      .tab-btn.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
 
-        .tab-content {
-            display: none;
-        }
+      .tab-content {
+        display: none;
+      }
 
-        .tab-content.active {
-            display: block;
-        }
+      .tab-content.active {
+        display: block;
+      }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+      .form-group {
+        margin-bottom: 20px;
+      }
 
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 14px;
-        }
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 14px;
+      }
 
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
 
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+      .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
 
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
 
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
 
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-        }
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+      }
 
-        .btn-primary:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
-        }
+      .btn-primary:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
+      .message {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: none;
+      }
 
-        .message.success {
-            background: #c6f6d5;
-            color: #22543d;
-            display: block;
-        }
+      .message.success {
+        background: #c6f6d5;
+        color: #22543d;
+        display: block;
+      }
 
-        .message.error {
-            background: #fed7d7;
-            color: #742a2a;
-            display: block;
-        }
+      .message.error {
+        background: #fed7d7;
+        color: #742a2a;
+        display: block;
+      }
 
-        .message.info {
-            background: #bee3f8;
-            color: #2c5282;
-            display: block;
-        }
+      .message.info {
+        background: #bee3f8;
+        color: #2c5282;
+        display: block;
+      }
 
-        .offline-notice {
-            text-align: center;
-            padding: 15px;
-            background: #fef5e7;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #856404;
-        }
+      .offline-notice {
+        text-align: center;
+        padding: 15px;
+        background: #fef5e7;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #856404;
+      }
 
-        .offline-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
+      .offline-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
 
-        .offline-link:hover {
-            text-decoration: underline;
-        }
+      .offline-link:hover {
+        text-decoration: underline;
+      }
 
-        .sync-mode-info {
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #4a5568;
-        }
+      .sync-mode-info {
+        text-align: center;
+        margin-top: 20px;
+        padding: 15px;
+        background: #f7fafc;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #4a5568;
+      }
 
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #718096;
-        }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #718096;
+      }
 
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #e2e8f0;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
         }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="auth-container">
-        <div class="auth-header">
-            <h1>🎓 Fiszki</h1>
-            <p>Sign in to sync your flashcards across devices</p>
-        </div>
+      <div class="auth-header">
+        <h1>🎓 Fiszki</h1>
+        <p>Sign in to sync your flashcards across devices</p>
+      </div>
 
-        <div id="offline-notice" class="offline-notice hidden">
-            ⚠️ You're offline. Sign in requires internet connection.
-        </div>
+      <div id="offline-notice" class="offline-notice hidden">
+        ⚠️ You're offline. Sign in requires internet connection.
+      </div>
 
-        <div id="message" class="message"></div>
+      <div id="message" class="message"></div>
 
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="signin">Sign In</button>
-            <button class="tab-btn" data-tab="signup">Sign Up</button>
-        </div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="signin">Sign In</button>
+        <button class="tab-btn" data-tab="signup">Sign Up</button>
+      </div>
 
-        <!-- Sign In Tab -->
-        <div id="signin-tab" class="tab-content active">
-            <form id="signin-form">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" id="signin-email" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="signin-password" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary" id="signin-btn">
-                    <span id="signin-text">Sign In</span>
-                    <span id="signin-loading" class="hidden">
-                        <span class="spinner"></span> Signing in...
-                    </span>
-                </button>
-            </form>
-        </div>
+      <!-- Sign In Tab -->
+      <div id="signin-tab" class="tab-content active">
+        <form id="signin-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-input"
+              id="signin-email"
+              required
+              placeholder="your@email.com"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="signin-password"
+              required
+              placeholder="••••••••"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary" id="signin-btn">
+            <span id="signin-text">Sign In</span>
+            <span id="signin-loading" class="hidden">
+              <span class="spinner"></span> Signing in...
+            </span>
+          </button>
+        </form>
+      </div>
 
-        <!-- Sign Up Tab -->
-        <div id="signup-tab" class="tab-content">
-            <form id="signup-form">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" id="signup-email" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="signup-password" required placeholder="••••••••" minlength="6">
-                    <small style="color: #718096; font-size: 12px;">Minimum 6 characters</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Confirm Password</label>
-                    <input type="password" class="form-input" id="signup-password-confirm" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary" id="signup-btn">
-                    <span id="signup-text">Sign Up</span>
-                    <span id="signup-loading" class="hidden">
-                        <span class="spinner"></span> Creating account...
-                    </span>
-                </button>
-            </form>
-        </div>
+      <!-- Sign Up Tab -->
+      <div id="signup-tab" class="tab-content">
+        <form id="signup-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-input"
+              id="signup-email"
+              required
+              placeholder="your@email.com"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="signup-password"
+              required
+              placeholder="••••••••"
+              minlength="6"
+            />
+            <small style="color: #718096; font-size: 12px"
+              >Minimum 6 characters</small
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="signup-password-confirm"
+              required
+              placeholder="••••••••"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary" id="signup-btn">
+            <span id="signup-text">Sign Up</span>
+            <span id="signup-loading" class="hidden">
+              <span class="spinner"></span> Creating account...
+            </span>
+          </button>
+        </form>
+      </div>
 
-        <a href="index.html" class="offline-link">💾 Continue in Offline Mode</a>
+      <a href="index.html" class="offline-link">💾 Continue in Offline Mode</a>
 
-        <div class="sync-mode-info">
-            <strong>💡 Tip:</strong> You can use the app offline and sync later
-        </div>
+      <div class="sync-mode-info">
+        <strong>💡 Tip:</strong> You can use the app offline and sync later
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="supabase-db.js"></script>
     <script>
-        // Check if config is loaded
-        if (typeof SUPABASE_CONFIG === 'undefined') {
-            document.getElementById('message').textContent = 'Configuration missing. Please set up config.js with your Supabase credentials.';
-            document.getElementById('message').className = 'message error';
-        }
+      // Check if config is loaded
+      if (typeof SUPABASE_CONFIG === "undefined") {
+        document.getElementById("message").textContent =
+          "Configuration missing. Please set up config.js with your Supabase credentials.";
+        document.getElementById("message").className = "message error";
+      }
 
-        const db = new SupabaseFlashcardDatabase(
-            SUPABASE_CONFIG.url,
-            SUPABASE_CONFIG.anonKey
-        );
+      const db = new SupabaseFlashcardDatabase(
+        SUPABASE_CONFIG.url,
+        SUPABASE_CONFIG.anonKey
+      );
 
-        // Tab switching
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+      // Tab switching
+      const tabBtns = document.querySelectorAll(".tab-btn");
+      const tabContents = document.querySelectorAll(".tab-content");
 
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabName = btn.dataset.tab;
-                
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                
-                btn.classList.add('active');
-                document.getElementById(`${tabName}-tab`).classList.add('active');
-                
-                hideMessage();
-            });
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tabName = btn.dataset.tab;
+
+          tabBtns.forEach((b) => b.classList.remove("active"));
+          tabContents.forEach((c) => c.classList.remove("active"));
+
+          btn.classList.add("active");
+          document.getElementById(`${tabName}-tab`).classList.add("active");
+
+          hideMessage();
+        });
+      });
+
+      // Sign In
+      document
+        .getElementById("signin-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("signin-email").value;
+          const password = document.getElementById("signin-password").value;
+
+          showLoading("signin", true);
+          hideMessage();
+
+          try {
+            await db.signIn(email, password);
+            showMessage("Sign in successful! Redirecting...", "success");
+
+            // Store sync preference
+            localStorage.setItem("syncMode", "auto");
+
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1000);
+          } catch (error) {
+            showMessage(
+              error.message ||
+                "Failed to sign in. Please check your credentials.",
+              "error"
+            );
+          } finally {
+            showLoading("signin", false);
+          }
         });
 
-        // Sign In
-        document.getElementById('signin-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-            
-            showLoading('signin', true);
-            hideMessage();
-            
-            try {
-                await db.signIn(email, password);
-                showMessage('Sign in successful! Redirecting...', 'success');
-                
-                // Store sync preference
-                localStorage.setItem('syncMode', 'auto');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            } catch (error) {
-                showMessage(error.message || 'Failed to sign in. Please check your credentials.', 'error');
-            } finally {
-                showLoading('signin', false);
-            }
+      // Sign Up
+      document
+        .getElementById("signup-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("signup-email").value;
+          const password = document.getElementById("signup-password").value;
+          const confirmPassword = document.getElementById(
+            "signup-password-confirm"
+          ).value;
+
+          if (password !== confirmPassword) {
+            showMessage("Passwords do not match", "error");
+            return;
+          }
+
+          showLoading("signup", true);
+          hideMessage();
+
+          try {
+            await db.signUp(email, password);
+            showMessage(
+              "Account created! Please check your email to confirm your account.",
+              "success"
+            );
+
+            // Clear form
+            document.getElementById("signup-form").reset();
+
+            // Switch to sign in tab after 3 seconds
+            setTimeout(() => {
+              document.querySelector('[data-tab="signin"]').click();
+            }, 3000);
+          } catch (error) {
+            showMessage(
+              error.message || "Failed to create account. Please try again.",
+              "error"
+            );
+          } finally {
+            showLoading("signup", false);
+          }
         });
 
-        // Sign Up
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-password-confirm').value;
-            
-            if (password !== confirmPassword) {
-                showMessage('Passwords do not match', 'error');
-                return;
-            }
-            
-            showLoading('signup', true);
-            hideMessage();
-            
-            try {
-                await db.signUp(email, password);
-                showMessage('Account created! Please check your email to confirm your account.', 'success');
-                
-                // Clear form
-                document.getElementById('signup-form').reset();
-                
-                // Switch to sign in tab after 3 seconds
-                setTimeout(() => {
-                    document.querySelector('[data-tab="signin"]').click();
-                }, 3000);
-            } catch (error) {
-                showMessage(error.message || 'Failed to create account. Please try again.', 'error');
-            } finally {
-                showLoading('signup', false);
-            }
-        });
+      // Helper functions
+      function showMessage(text, type) {
+        const messageEl = document.getElementById("message");
+        messageEl.textContent = text;
+        messageEl.className = `message ${type}`;
+      }
 
-        // Helper functions
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `message ${type}`;
+      function hideMessage() {
+        const messageEl = document.getElementById("message");
+        messageEl.className = "message";
+      }
+
+      function showLoading(form, show) {
+        const btn = document.getElementById(`${form}-btn`);
+        const text = document.getElementById(`${form}-text`);
+        const loading = document.getElementById(`${form}-loading`);
+
+        if (show) {
+          text.classList.add("hidden");
+          loading.classList.remove("hidden");
+          btn.disabled = true;
+        } else {
+          text.classList.remove("hidden");
+          loading.classList.add("hidden");
+          btn.disabled = false;
         }
+      }
 
-        function hideMessage() {
-            const messageEl = document.getElementById('message');
-            messageEl.className = 'message';
+      // Check online status
+      function updateOnlineStatus() {
+        const offlineNotice = document.getElementById("offline-notice");
+        if (!navigator.onLine) {
+          offlineNotice.classList.remove("hidden");
+        } else {
+          offlineNotice.classList.add("hidden");
         }
+      }
 
-        function showLoading(form, show) {
-            const btn = document.getElementById(`${form}-btn`);
-            const text = document.getElementById(`${form}-text`);
-            const loading = document.getElementById(`${form}-loading`);
-            
-            if (show) {
-                text.classList.add('hidden');
-                loading.classList.remove('hidden');
-                btn.disabled = true;
-            } else {
-                text.classList.remove('hidden');
-                loading.classList.add('hidden');
-                btn.disabled = false;
-            }
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
+      updateOnlineStatus();
+
+      // Check if already signed in
+      db.getCurrentUser().then((user) => {
+        if (user) {
+          showMessage("You are already signed in. Redirecting...", "info");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
         }
-
-        // Check online status
-        function updateOnlineStatus() {
-            const offlineNotice = document.getElementById('offline-notice');
-            if (!navigator.onLine) {
-                offlineNotice.classList.remove('hidden');
-            } else {
-                offlineNotice.classList.add('hidden');
-            }
-        }
-
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus();
-
-        // Check if already signed in
-        db.getCurrentUser().then(user => {
-            if (user) {
-                showMessage('You are already signed in. Redirecting...', 'info');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-            }
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

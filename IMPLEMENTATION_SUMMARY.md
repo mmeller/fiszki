@@ -9,6 +9,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
 ### Core Files Created
 
 1. **schema.sql** (120 lines)
+
    - PostgreSQL database schema for Supabase
    - Two tables: `categories` and `words`
    - Row Level Security (RLS) policies
@@ -16,6 +17,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
    - Helper function to get category word counts
 
 2. **supabase-db.js** (400+ lines)
+
    - `SupabaseFlashcardDatabase` class
    - Authentication methods: `signIn()`, `signUp()`, `signOut()`, `getCurrentUser()`
    - CRUD operations matching local database API
@@ -23,6 +25,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
    - Data transformation to match local format
 
 3. **sync-manager.js** (450+ lines)
+
    - `HybridSyncManager` class
    - Local-first architecture
    - Queue-based retry mechanism
@@ -32,6 +35,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
    - Category ID mapping between local and cloud
 
 4. **auth.html** (320 lines)
+
    - Beautiful sign in/sign up interface
    - Tab switching between login/signup
    - Form validation
@@ -41,12 +45,14 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
    - Link to continue in offline mode
 
 5. **config.js** (15 lines)
+
    - Configuration template
    - Placeholders for Supabase URL and API key
    - Sync configuration options
    - **⚠️ Users must edit this file with their Supabase credentials**
 
 6. **SUPABASE_SETUP.md** (400+ lines)
+
    - Step-by-step setup instructions
    - Troubleshooting guide
    - Security best practices
@@ -66,6 +72,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
 ### Files Modified
 
 1. **index.html**
+
    - Added authentication panel (sign in/out)
    - User email display
    - Sync status indicator (green/orange/gray dot)
@@ -119,6 +126,7 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
 ## 🔄 Sync Modes
 
 ### 1. Auto Mode (Default when signed in)
+
 - Writes to local database immediately
 - Syncs to cloud immediately (if online)
 - If offline, queues operation for later
@@ -126,12 +134,14 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
 - **Best for**: Online usage, real-time multi-device sync
 
 ### 2. Manual Mode
+
 - Writes to local database immediately
 - Waits for user to trigger sync
 - User can work offline and batch sync later
 - **Best for**: Unstable connections, deliberate sync control
 
 ### 3. Offline-Only Mode (Default when not signed in)
+
 - Only uses local database
 - No cloud sync at all
 - **Best for**: Privacy-focused users, no Supabase account
@@ -139,7 +149,9 @@ Your flashcard app now has **full Supabase cloud sync integration** with a hybri
 ## 🔐 Security Features
 
 ### Row Level Security (RLS)
+
 Every query is automatically filtered by user ID:
+
 ```sql
 -- Users can only see their own data
 CREATE POLICY "Users can view own categories"
@@ -148,12 +160,14 @@ USING (auth.uid() = user_id);
 ```
 
 ### Authentication
+
 - Email/password via Supabase Auth
 - Email confirmation required (configurable)
 - Secure JWT tokens
 - Automatic session management
 
 ### Data Isolation
+
 - Each user's data is completely isolated
 - No way to access another user's flashcards
 - User ID is stored with every record
@@ -203,6 +217,7 @@ USING (auth.uid() = user_id);
 ## 🚀 User Experience
 
 ### First Time (No Supabase)
+
 1. User opens `index.html`
 2. Sees "Sign In" button but can ignore it
 3. App works perfectly offline
@@ -210,6 +225,7 @@ USING (auth.uid() = user_id);
 5. No configuration needed
 
 ### First Time (With Supabase)
+
 1. User follows `SUPABASE_SETUP.md`
 2. Creates Supabase project (5 minutes)
 3. Runs `schema.sql` in Supabase SQL editor
@@ -220,6 +236,7 @@ USING (auth.uid() = user_id);
 8. Data automatically syncs to cloud
 
 ### Daily Usage (Signed In)
+
 1. User opens app on computer
 2. Already signed in (session persists)
 3. Creates flashcards
@@ -229,6 +246,7 @@ USING (auth.uid() = user_id);
 7. All flashcards are there!
 
 ### Offline Then Online
+
 1. User on train (no internet)
 2. Creates 20 new flashcards
 3. Sync indicator shows gray dot (offline)
@@ -242,15 +260,17 @@ USING (auth.uid() = user_id);
 ## 🛠️ Configuration Required
 
 ### For Offline-Only Use
+
 **No configuration needed!** Just open `index.html`.
 
 ### For Cloud Sync
+
 User must edit `config.js`:
 
 ```javascript
 const SUPABASE_CONFIG = {
-    url: 'https://yourproject.supabase.co',  // Replace this
-    anonKey: 'eyJhbGci...'                   // Replace this
+  url: "https://yourproject.supabase.co", // Replace this
+  anonKey: "eyJhbGci...", // Replace this
 };
 ```
 
@@ -260,6 +280,7 @@ Supabase Dashboard → Settings → API
 ## 📝 Next Steps for Users
 
 ### Option 1: Use Offline
+
 ```bash
 # Just open the app
 open index.html
@@ -267,6 +288,7 @@ open index.html
 ```
 
 ### Option 2: Set Up Cloud Sync
+
 ```bash
 # 1. Read the setup guide
 open SUPABASE_SETUP.md
@@ -291,12 +313,14 @@ open index.html
 To fully test the integration:
 
 - [ ] **Offline Mode**
+
   - [ ] Create categories without Supabase
   - [ ] Import words
   - [ ] Study flashcards
   - [ ] Sign in button visible but optional
 
 - [ ] **Sign Up**
+
   - [ ] Open `auth.html`
   - [ ] Create account with email/password
   - [ ] Receive confirmation email
@@ -304,17 +328,20 @@ To fully test the integration:
   - [ ] See success message
 
 - [ ] **Sign In**
+
   - [ ] Sign in with confirmed account
   - [ ] Redirect to main app
   - [ ] See email in top right
   - [ ] See green sync status dot
 
 - [ ] **Auto Sync**
+
   - [ ] Create category (should sync immediately)
   - [ ] Add words (should sync immediately)
   - [ ] Check Supabase dashboard to confirm data
 
 - [ ] **Offline Queueing**
+
   - [ ] Disconnect from internet
   - [ ] Create category
   - [ ] See gray sync status dot
@@ -323,6 +350,7 @@ To fully test the integration:
   - [ ] Verify data appeared in Supabase
 
 - [ ] **Multi-Device Sync**
+
   - [ ] Sign in on Device A
   - [ ] Create categories and words
   - [ ] Sign in on Device B with same account
@@ -332,12 +360,14 @@ To fully test the integration:
   - [ ] See changes from Device B
 
 - [ ] **Sync Modes**
+
   - [ ] Try Auto mode (immediate sync)
   - [ ] Try Manual mode (no auto sync)
   - [ ] Try Offline-only mode (no cloud at all)
   - [ ] Verify mode persists after refresh
 
 - [ ] **Sign Out**
+
   - [ ] Click Sign Out button
   - [ ] See "Sign In" button appear
   - [ ] Verify app switches to offline mode
@@ -353,6 +383,7 @@ To fully test the integration:
 ## 💾 Storage Details
 
 ### Local Storage (IndexedDB)
+
 - **Location**: Browser's IndexedDB
 - **Size**: Typically 50MB+ (varies by browser)
 - **Persistence**: Until user clears browser data
@@ -360,6 +391,7 @@ To fully test the integration:
 - **Security**: Same-origin policy
 
 ### Cloud Storage (Supabase)
+
 - **Location**: PostgreSQL database
 - **Size**: 500MB on free tier
 - **Persistence**: Permanent (unless manually deleted)
@@ -367,6 +399,7 @@ To fully test the integration:
 - **Security**: Row Level Security + JWT tokens
 
 ### Estimated Capacity
+
 ```
 IndexedDB (local):
 - ~250,000 word pairs (at ~200 bytes each)
@@ -411,6 +444,7 @@ If users encounter issues:
 ## 🎉 Success!
 
 The app now has:
+
 - ✅ Offline-first architecture
 - ✅ Optional cloud sync
 - ✅ Multi-device support

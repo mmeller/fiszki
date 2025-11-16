@@ -16,12 +16,14 @@ Fiszki is a language learning flashcard application with **hybrid sync** - it wo
 ### Option 2: Cloud Sync (Recommended)
 
 1. **Set up Supabase** (one-time setup - 5 minutes)
+
    - Follow instructions in `SUPABASE_SETUP.md`
    - Create free Supabase account
    - Run SQL schema
    - Copy credentials to `config.js`
 
 2. **Sign up / Sign in**
+
    - Open `auth.html` in your browser
    - Create an account or sign in
    - Your data will sync across devices
@@ -34,6 +36,7 @@ Fiszki is a language learning flashcard application with **hybrid sync** - it wo
 ## 📚 Features
 
 ### ✅ Available Now
+
 - **Categories**: Organize words by topic (e.g., "Greek Gods", "Unit 1")
 - **Import CSV**: Bulk import word lists with `word|pronunciation` format
 - **Manual Add**: Add individual word pairs
@@ -46,15 +49,18 @@ Fiszki is a language learning flashcard application with **hybrid sync** - it wo
 ### 🔄 Sync Modes
 
 **Auto (Recommended for online)**
+
 - Syncs changes immediately to cloud
 - Real-time updates across devices
 
 **Manual**
+
 - Changes saved locally first
 - Manually trigger sync when ready
 - Good for unstable connections
 
 **Offline-Only**
+
 - No cloud sync
 - All data stays on your device
 - Use without Supabase account
@@ -97,6 +103,7 @@ fiszki/
 **Format**: `word1|pronunciation1|word2|pronunciation2`
 
 Example CSV (`bogowie.csv`):
+
 ```
 Greek Name|Pronunciation|English Name|Meaning
 Ζεύς|Zeus|Zeus|King of gods
@@ -105,6 +112,7 @@ Greek Name|Pronunciation|English Name|Meaning
 ```
 
 Steps:
+
 ```
 1. Go to "Import Words" tab
 2. Select your category
@@ -147,15 +155,17 @@ Steps:
 ### First Time Setup (Cloud Sync)
 
 1. **Configure Supabase**
+
    ```javascript
    // In config.js, replace with your values:
    const SUPABASE_CONFIG = {
-       url: 'https://yourproject.supabase.co',
-       anonKey: 'your-anon-key-here'
+     url: "https://yourproject.supabase.co",
+     anonKey: "your-anon-key-here",
    };
    ```
 
 2. **Create Account**
+
    - Open `auth.html`
    - Enter email and password
    - Check email for confirmation link
@@ -198,6 +208,7 @@ Steps:
 **Problem**: Can't sign in, see config error
 
 **Solution**:
+
 1. Open `config.js`
 2. Replace `YOUR_SUPABASE_URL` and `YOUR_SUPABASE_ANON_KEY` with real values
 3. Get values from Supabase Dashboard → Settings → API
@@ -207,6 +218,7 @@ Steps:
 **Problem**: Changes on one device don't appear on another
 
 **Solution**:
+
 1. Check internet connection
 2. Verify you're signed in on both devices
 3. Check sync mode is "Auto" (bottom right selector)
@@ -218,6 +230,7 @@ Steps:
 **Problem**: Categories disappeared after signing in/out
 
 **Solution**:
+
 - **Signed out**: Only local data is shown
 - **Signed in**: Only cloud data is shown (may be empty if new account)
 - **To migrate**: See "Migrating Data" section below
@@ -227,6 +240,7 @@ Steps:
 **Problem**: No confirmation email after signup
 
 **Solution**:
+
 1. Check spam/junk folder
 2. Wait a few minutes (can take 5-10 mins)
 3. In Supabase Dashboard → Authentication → Settings:
@@ -251,11 +265,13 @@ This will upload all your local categories and words to the cloud.
 ### Export Your Data
 
 **From UI** (recommended):
+
 1. Go to `categories.html`
 2. Click "Export" next to each category
 3. Saves as CSV file
 
 **From Supabase** (if using cloud):
+
 1. Open Supabase Dashboard → SQL Editor
 2. Run:
    ```sql
@@ -267,6 +283,7 @@ This will upload all your local categories and words to the cloud.
 ## 🆘 Getting Help
 
 ### Documentation Files
+
 - `SUPABASE_SETUP.md` - Detailed cloud setup instructions
 - `INTEGRATION_GUIDE.md` - Complete user guide
 - `DATABASE_README.md` - API documentation for developers
@@ -301,6 +318,7 @@ A: Yes! You can host Supabase yourself or use any compatible PostgreSQL database
 ## 📊 Usage Examples
 
 ### Greek Gods Study List
+
 ```csv
 Greek Name|Pronunciation|English|Domain
 Ζεύς|Zeus|Zeus|Sky & Thunder
@@ -310,6 +328,7 @@ Greek Name|Pronunciation|English|Domain
 ```
 
 ### Language Vocabulary
+
 ```csv
 Polski|Polish Pronunciation|English|Category
 Cześć|cheshch|Hello|Greetings
@@ -319,6 +338,7 @@ Szkoła|shkoh-wah|School|Places
 ```
 
 ### Technical Terms
+
 ```csv
 Term|Pronunciation|Definition|Field
 Algorithm||Step-by-step procedure|Computer Science
