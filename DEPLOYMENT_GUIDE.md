@@ -3,6 +3,7 @@
 ## ✅ Completed Implementation
 
 Both backend and frontend are complete:
+
 - ✅ IndexedDB v2 migration (automatic on first load)
 - ✅ Supabase API methods (setCategoryVisibility, getPublicCategories, importCategory, etc.)
 - ✅ Sync manager with offline support
@@ -37,6 +38,7 @@ supabase db push
 ### What the Schema Does
 
 The `schema-shared.sql` file will:
+
 - ✅ Add `visibility` column to `categories` table (private/public/shared)
 - ✅ Create `category_imports` table to track imported categories
 - ✅ Create indexes for performance
@@ -45,6 +47,7 @@ The `schema-shared.sql` file will:
 - ✅ Enable RLS on the new table
 
 **Important**: This migration is **safe** and **backward compatible**:
+
 - Existing categories will default to `visibility = 'private'`
 - No data will be lost
 - The app will continue to work even if schema is not applied (visibility features just won't sync to cloud)
@@ -52,6 +55,7 @@ The `schema-shared.sql` file will:
 ## 🧪 Testing the Feature
 
 ### 1. Local Database (IndexedDB)
+
 The local database will automatically upgrade to v2 on first page load. No action needed.
 
 ### 2. Test Visibility Toggle
@@ -109,21 +113,25 @@ The local database will automatically upgrade to v2 on first page load. No actio
 ## 🐛 Troubleshooting
 
 ### "Failed to change visibility"
+
 - Check if you're logged in (auth panel in top-right)
 - Check browser console for errors
 - Verify schema was applied to Supabase
 
 ### "No public categories yet"
+
 - Make sure you've made at least one category public
 - Check that schema was applied (RLS policies updated)
 - Verify you're logged in
 
 ### Import button disabled / "✓ Imported" showing incorrectly
+
 - Clear IndexedDB: DevTools → Application → IndexedDB → delete `fiszki-db`
 - Refresh page
 - Check `category_imports` table in Supabase
 
 ### Visibility not syncing to cloud
+
 - Check network tab for errors
 - Verify you're logged in to Supabase
 - Check `syncQueue` in localStorage
@@ -132,24 +140,27 @@ The local database will automatically upgrade to v2 on first page load. No actio
 ## 📊 Monitoring
 
 ### Check Sync Queue
+
 ```javascript
 // In browser console
-JSON.parse(localStorage.getItem('syncQueue') || '[]')
+JSON.parse(localStorage.getItem("syncQueue") || "[]");
 ```
 
 ### Check Local Database
+
 ```javascript
 // In browser console
-const request = indexedDB.open('fiszki-db', 2);
+const request = indexedDB.open("fiszki-db", 2);
 request.onsuccess = (e) => {
   const db = e.target.result;
-  const tx = db.transaction(['categories'], 'readonly');
-  const store = tx.objectStore('categories');
+  const tx = db.transaction(["categories"], "readonly");
+  const store = tx.objectStore("categories");
   store.getAll().onsuccess = (e) => console.log(e.target.result);
 };
 ```
 
 ### Check Supabase
+
 ```sql
 -- In Supabase SQL Editor
 
@@ -160,14 +171,15 @@ SELECT * FROM public_categories;
 SELECT * FROM category_imports;
 
 -- Check visibility distribution
-SELECT visibility, COUNT(*) 
-FROM categories 
+SELECT visibility, COUNT(*)
+FROM categories
 GROUP BY visibility;
 ```
 
 ## 🚀 Next Steps (Optional Enhancements)
 
 ### Phase 3 Features (Future)
+
 - Preview dialog before importing (show sample words)
 - Pagination for Public Library (currently loads 50)
 - Filter by language pair
@@ -176,12 +188,14 @@ GROUP BY visibility;
 - Import history view
 
 ### Performance Optimizations
+
 - Virtual scrolling for large lists
 - Lazy loading of public categories
 - Caching of public categories
 - Debounced search
 
 ### Analytics (Optional)
+
 - Track most imported categories
 - Track most active sharers
 - Popular language pairs
@@ -196,6 +210,7 @@ GROUP BY visibility;
 ## 🔐 Security
 
 All security is handled by Supabase RLS policies:
+
 - Users can only modify their own categories
 - Users can view their own private categories
 - Users can view anyone's public categories

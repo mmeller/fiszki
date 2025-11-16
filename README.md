@@ -5,18 +5,21 @@ A web application for learning foreign language words through flashcards and int
 ## ✨ Key Features
 
 ### 📱 **Offline-First with Cloud Sync**
+
 - Works offline - all data stored locally in IndexedDB
 - Optional cloud sync with Supabase (when logged in)
 - Automatic sync when back online
 - Queue system for offline changes
 
 ### 📚 **Category Management**
+
 - Organize words into categories (e.g., "Unit 1", "Travel Phrases")
 - Create unlimited categories with descriptions
 - Track word counts and creation dates
 - Import/export categories as JSON
 
 ### 🌍 **Shared Word Lists** ⭐ NEW
+
 - Share your categories publicly with the community
 - Browse public categories from other users
 - Import categories (full copy with all words)
@@ -86,8 +89,8 @@ Polish word | polish pronunciation | English word | english pronunciation
 
 1. **Open the App**: Open `index.html` in your web browser
 2. **Sign Up (Optional)**: Create an account to enable cloud sync and sharing
-3. **Create Categories**: 
-   - Click "Manage Categories" 
+3. **Create Categories**:
+   - Click "Manage Categories"
    - Create categories to organize your words
 4. **Import Words**:
    - Go to "Import Words" tab
@@ -112,6 +115,7 @@ Polish word | polish pronunciation | English word | english pronunciation
 ## 🚀 Getting Started with Sharing
 
 See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for:
+
 - Database schema setup (one-time)
 - Testing the sharing features
 - Troubleshooting tips

@@ -398,10 +398,18 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="my-categories" onclick="app.switchTab('my-categories')">
+        <button
+          class="tab active"
+          data-tab="my-categories"
+          onclick="app.switchTab('my-categories')"
+        >
           My Categories
         </button>
-        <button class="tab" data-tab="public-library" onclick="app.switchTab('public-library')">
+        <button
+          class="tab"
+          data-tab="public-library"
+          onclick="app.switchTab('public-library')"
+        >
           🌍 Public Library
         </button>
       </div>
@@ -423,7 +431,11 @@
             placeholder="🔍 Search public categories..."
             oninput="app.searchPublicCategories()"
           />
-          <select id="sortPublic" class="sort-select" onchange="app.loadPublicCategories()">
+          <select
+            id="sortPublic"
+            class="sort-select"
+            onchange="app.loadPublicCategories()"
+          >
             <option value="recent">Most Recent</option>
             <option value="alphabetical">Alphabetical</option>
           </select>
@@ -578,19 +590,19 @@
 
         renderCategoryCard(category) {
           const createdDate = new Date(category.createdAt).toLocaleDateString();
-          const visibility = category.visibility || 'private';
+          const visibility = category.visibility || "private";
           const isImported = category.originalCategoryId !== undefined;
-          
+
           // Determine badge
-          let badge = '';
+          let badge = "";
           if (isImported) {
             badge = '<span class="badge badge-imported">📥 Imported</span>';
-          } else if (visibility === 'public') {
+          } else if (visibility === "public") {
             badge = '<span class="badge badge-public">🌍 Public</span>';
           } else {
             badge = '<span class="badge badge-private">🔒 Private</span>';
           }
-          
+
           return `
                     <div class="category-card">
                         <div class="category-header">
@@ -632,12 +644,26 @@
                             })">
                                 View Words
                             </button>
-                            ${!isImported ? `
-                            <button class="btn ${visibility === 'public' ? 'btn-secondary' : 'btn-success'} btn-small" 
-                                    onclick="app.toggleVisibility(${category.id})">
-                                ${visibility === 'public' ? '🔒 Make Private' : '🌍 Make Public'}
+                            ${
+                              !isImported
+                                ? `
+                            <button class="btn ${
+                              visibility === "public"
+                                ? "btn-secondary"
+                                : "btn-success"
+                            } btn-small" 
+                                    onclick="app.toggleVisibility(${
+                                      category.id
+                                    })">
+                                ${
+                                  visibility === "public"
+                                    ? "🔒 Make Private"
+                                    : "🌍 Make Public"
+                                }
                             </button>
-                            ` : ''}
+                            `
+                                : ""
+                            }
                             <button class="btn btn-success btn-small" onclick="app.exportCategory(${
                               category.id
                             })">
@@ -798,22 +824,22 @@
         // Tab switching
         switchTab(tabName) {
           // Update tab buttons
-          document.querySelectorAll('.tab').forEach(tab => {
+          document.querySelectorAll(".tab").forEach((tab) => {
             if (tab.dataset.tab === tabName) {
-              tab.classList.add('active');
+              tab.classList.add("active");
             } else {
-              tab.classList.remove('active');
+              tab.classList.remove("active");
             }
           });
 
           // Update tab content
-          document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
+          document.querySelectorAll(".tab-content").forEach((content) => {
+            content.classList.remove("active");
           });
-          document.getElementById(`${tabName}-tab`).classList.add('active');
+          document.getElementById(`${tabName}-tab`).classList.add("active");
 
           // Load content if needed
-          if (tabName === 'public-library') {
+          if (tabName === "public-library") {
             this.loadPublicCategories();
           }
         }
@@ -822,28 +848,32 @@
         async toggleVisibility(categoryId) {
           try {
             const category = await this.db.getCategory(categoryId);
-            const newVisibility = category.visibility === 'public' ? 'private' : 'public';
-            
+            const newVisibility =
+              category.visibility === "public" ? "private" : "public";
+
             await this.db.setCategoryVisibility(categoryId, newVisibility);
-            
+
             alert(`Category is now ${newVisibility}!`);
             await this.loadCategories();
           } catch (error) {
-            console.error('Failed to toggle visibility:', error);
-            alert('Failed to change visibility: ' + error.message);
+            console.error("Failed to toggle visibility:", error);
+            alert("Failed to change visibility: " + error.message);
           }
         }
 
         // Load public categories
         async loadPublicCategories() {
-          const container = document.getElementById('publicCategoriesContainer');
-          const sortBy = document.getElementById('sortPublic').value;
-          
+          const container = document.getElementById(
+            "publicCategoriesContainer"
+          );
+          const sortBy = document.getElementById("sortPublic").value;
+
           try {
-            container.innerHTML = '<div class="loading">Loading public categories...</div>';
-            
+            container.innerHTML =
+              '<div class="loading">Loading public categories...</div>';
+
             const categories = await this.db.getPublicCategories(1, 50, sortBy);
-            
+
             if (categories.length === 0) {
               container.innerHTML = `
                 <div class="empty-state">
@@ -857,11 +887,13 @@
 
             container.innerHTML = `
               <div class="categories-grid">
-                ${categories.map(cat => this.renderPublicCategoryCard(cat)).join('')}
+                ${categories
+                  .map((cat) => this.renderPublicCategoryCard(cat))
+                  .join("")}
               </div>
             `;
           } catch (error) {
-            console.error('Failed to load public categories:', error);
+            console.error("Failed to load public categories:", error);
             container.innerHTML = `
               <div class="empty-state">
                 <div class="empty-state-icon">⚠️</div>
@@ -876,14 +908,22 @@
         renderPublicCategoryCard(category) {
           const createdDate = new Date(category.createdAt).toLocaleDateString();
           const isImported = category.isImportedByMe || false;
-          
+
           return `
             <div class="category-card">
               <div class="category-header">
                 <div>
                   <span class="badge badge-public">🌍 Public</span>
-                  <div class="category-name">${this.escapeHtml(category.name)}</div>
-                  ${category.description ? `<div class="category-description">${this.escapeHtml(category.description)}</div>` : ''}
+                  <div class="category-name">${this.escapeHtml(
+                    category.name
+                  )}</div>
+                  ${
+                    category.description
+                      ? `<div class="category-description">${this.escapeHtml(
+                          category.description
+                        )}</div>`
+                      : ""
+                  }
                 </div>
               </div>
               <div class="category-info">
@@ -899,13 +939,16 @@
               <div class="category-info">
                 <div class="info-item">
                   <span>🗣️</span>
-                  <span>${category.languagePair.lang1} ↔ ${category.languagePair.lang2}</span>
+                  <span>${category.languagePair.lang1} ↔ ${
+            category.languagePair.lang2
+          }</span>
                 </div>
               </div>
               <div class="category-actions">
-                ${isImported 
-                  ? '<button class="btn btn-secondary btn-small" disabled>✓ Imported</button>'
-                  : `<button class="btn btn-primary btn-small" onclick="app.importPublicCategory(${category.id})">📥 Import</button>`
+                ${
+                  isImported
+                    ? '<button class="btn btn-secondary btn-small" disabled>✓ Imported</button>'
+                    : `<button class="btn btn-primary btn-small" onclick="app.importPublicCategory(${category.id})">📥 Import</button>`
                 }
               </div>
             </div>
@@ -914,9 +957,11 @@
 
         // Search public categories
         async searchPublicCategories() {
-          const query = document.getElementById('searchPublic').value.trim();
-          const container = document.getElementById('publicCategoriesContainer');
-          
+          const query = document.getElementById("searchPublic").value.trim();
+          const container = document.getElementById(
+            "publicCategoriesContainer"
+          );
+
           if (!query) {
             this.loadPublicCategories();
             return;
@@ -924,9 +969,9 @@
 
           try {
             container.innerHTML = '<div class="loading">Searching...</div>';
-            
+
             const categories = await this.db.searchPublicCategories(query);
-            
+
             if (categories.length === 0) {
               container.innerHTML = `
                 <div class="empty-state">
@@ -940,12 +985,14 @@
 
             container.innerHTML = `
               <div class="categories-grid">
-                ${categories.map(cat => this.renderPublicCategoryCard(cat)).join('')}
+                ${categories
+                  .map((cat) => this.renderPublicCategoryCard(cat))
+                  .join("")}
               </div>
             `;
           } catch (error) {
-            console.error('Failed to search categories:', error);
-            alert('Failed to search: ' + error.message);
+            console.error("Failed to search categories:", error);
+            alert("Failed to search: " + error.message);
           }
         }
 
@@ -955,26 +1002,32 @@
             // Check if already imported
             const hasImported = await this.db.hasImportedCategory(categoryId);
             if (hasImported) {
-              alert('You have already imported this category!');
+              alert("You have already imported this category!");
               return;
             }
 
-            if (!confirm('Import this category? All words will be copied to your account.')) {
+            if (
+              !confirm(
+                "Import this category? All words will be copied to your account."
+              )
+            ) {
               return;
             }
 
             const importedCategory = await this.db.importCategory(categoryId);
-            
-            alert(`Category imported successfully! You now have ${importedCategory.wordCount} new words.`);
-            
+
+            alert(
+              `Category imported successfully! You now have ${importedCategory.wordCount} new words.`
+            );
+
             // Reload public library to update buttons
             await this.loadPublicCategories();
-            
+
             // Update stats
             await this.loadStatistics();
           } catch (error) {
-            console.error('Failed to import category:', error);
-            alert('Failed to import category: ' + error.message);
+            console.error("Failed to import category:", error);
+            alert("Failed to import category: " + error.message);
           }
         }
 

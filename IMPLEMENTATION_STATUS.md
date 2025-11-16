@@ -3,6 +3,7 @@
 ## ✅ Completed (Backend)
 
 ### Database Layer (database.js)
+
 - ✅ Upgraded IndexedDB to version 2
 - ✅ Added `visibility` column (default: 'private')
 - ✅ Created `category_imports` table
@@ -12,6 +13,7 @@
 - ✅ Added `getImportedCategories()` method
 
 ### Cloud Layer (supabase-db.js)
+
 - ✅ Added `setCategoryVisibility(categoryId, visibility)` method
 - ✅ Added `getPublicCategories(page, limit, sortBy)` method
 - ✅ Added `searchPublicCategories(query)` method
@@ -20,16 +22,18 @@
 - ✅ Proper error handling for duplicate imports
 
 ### Sync Manager (sync-manager.js)
+
 - ✅ Added `setCategoryVisibility()` with offline queueing
 - ✅ Added `getPublicCategories()` wrapper
-- ✅ Added `searchPublicCategories()` wrapper  
+- ✅ Added `searchPublicCategories()` wrapper
 - ✅ Added `importCategory()` with local/cloud sync
 - ✅ Added `hasImportedCategory()` checker
 - ✅ Queue support for visibility changes when offline
 
 ### Database Schema (schema-shared.sql)
+
 - ✅ ALTER TABLE to add visibility column
-- ✅ CREATE TABLE category_imports  
+- ✅ CREATE TABLE category_imports
 - ✅ Updated RLS policies for public visibility
 - ✅ Created public_categories VIEW
 - ✅ Indexes for performance
@@ -39,6 +43,7 @@
 ### Categories Page (categories.html)
 
 #### 1. Add Tabs
+
 ```html
 <div class="tabs">
   <button class="tab active" data-tab="my-categories">My Categories</button>
@@ -47,6 +52,7 @@
 ```
 
 #### 2. Add Visibility Badges
+
 ```html
 <span class="badge badge-private">🔒 Private</span>
 <span class="badge badge-public">🌍 Public</span>
@@ -54,6 +60,7 @@
 ```
 
 #### 3. Add Visibility Toggle Button
+
 ```html
 <button class="btn btn-small" onclick="app.toggleVisibility(categoryId)">
   Make Public / Make Private
@@ -61,9 +68,14 @@
 ```
 
 #### 4. Create Public Library Tab Content
+
 ```html
 <div id="public-library-tab" class="tab-content hidden">
-  <input type="search" id="search-public" placeholder="Search public categories...">
+  <input
+    type="search"
+    id="search-public"
+    placeholder="Search public categories..."
+  />
   <select id="sort-public">
     <option value="recent">Most Recent</option>
     <option value="alphabetical">Alphabetical</option>
@@ -73,6 +85,7 @@
 ```
 
 #### 5. Public Category Card Template
+
 ```javascript
 renderPublicCategoryCard(category) {
   return `
@@ -85,7 +98,7 @@ renderPublicCategoryCard(category) {
         <span>🌐 ${category.languagePair.lang1} → ${category.languagePair.lang2}</span>
       </div>
       <div class="actions">
-        ${category.isImportedByMe 
+        ${category.isImportedByMe
           ? '<button class="btn btn-secondary btn-small" disabled>✓ Imported</button>'
           : '<button class="btn btn-primary btn-small" onclick="app.importCategory(' + category.id + ')">Import</button>'
         }
@@ -97,6 +110,7 @@ renderPublicCategoryCard(category) {
 ```
 
 #### 6. Add JavaScript Methods
+
 ```javascript
 // Toggle visibility
 async toggleVisibility(categoryId) {
@@ -124,7 +138,7 @@ async importCategory(categoryId) {
     alert('You have already imported this category');
     return;
   }
-  
+
   await this.db.importCategory(categoryId);
   alert('Category imported successfully!');
   await this.loadCategories();
@@ -230,6 +244,7 @@ async importCategory(categoryId) {
 ## 🚀 Ready to Deploy
 
 Backend is complete and committed. UI implementation can be done incrementally:
+
 - Phase 1: Badges and visibility toggle ✅ Ready
 - Phase 2: Public Library tab (browse, search)
 - Phase 3: Import functionality with preview
