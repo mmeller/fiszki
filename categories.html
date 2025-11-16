@@ -261,6 +261,106 @@
         padding: 40px;
         color: #718096;
       }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .tab {
+        padding: 12px 24px;
+        border: none;
+        background: none;
+        font-size: 16px;
+        font-weight: 600;
+        color: #718096;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+        margin-bottom: -2px;
+      }
+
+      .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab:hover:not(.active) {
+        color: #4a5568;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Badges */
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .badge-private {
+        background: #718096;
+        color: white;
+      }
+
+      .badge-public {
+        background: #48bb78;
+        color: white;
+      }
+
+      .badge-imported {
+        background: #4299e1;
+        color: white;
+      }
+
+      /* Public Library */
+      .library-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .search-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .sort-select {
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+      }
+
+      .sort-select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
     </style>
   </head>
   <body>
@@ -296,8 +396,41 @@
         </div>
       </div>
 
-      <div id="categoriesContainer">
-        <div class="loading">Loading categories...</div>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="my-categories" onclick="app.switchTab('my-categories')">
+          My Categories
+        </button>
+        <button class="tab" data-tab="public-library" onclick="app.switchTab('public-library')">
+          🌍 Public Library
+        </button>
+      </div>
+
+      <!-- My Categories Tab -->
+      <div id="my-categories-tab" class="tab-content active">
+        <div id="categoriesContainer">
+          <div class="loading">Loading categories...</div>
+        </div>
+      </div>
+
+      <!-- Public Library Tab -->
+      <div id="public-library-tab" class="tab-content">
+        <div class="library-controls">
+          <input
+            type="search"
+            id="searchPublic"
+            class="search-input"
+            placeholder="🔍 Search public categories..."
+            oninput="app.searchPublicCategories()"
+          />
+          <select id="sortPublic" class="sort-select" onchange="app.loadPublicCategories()">
+            <option value="recent">Most Recent</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
+        </div>
+        <div id="publicCategoriesContainer">
+          <div class="loading">Loading public categories...</div>
+        </div>
       </div>
     </div>
 
@@ -445,10 +578,24 @@
 
         renderCategoryCard(category) {
           const createdDate = new Date(category.createdAt).toLocaleDateString();
+          const visibility = category.visibility || 'private';
+          const isImported = category.originalCategoryId !== undefined;
+          
+          // Determine badge
+          let badge = '';
+          if (isImported) {
+            badge = '<span class="badge badge-imported">📥 Imported</span>';
+          } else if (visibility === 'public') {
+            badge = '<span class="badge badge-public">🌍 Public</span>';
+          } else {
+            badge = '<span class="badge badge-private">🔒 Private</span>';
+          }
+          
           return `
                     <div class="category-card">
                         <div class="category-header">
                             <div>
+                                ${badge}
                                 <div class="category-name">${this.escapeHtml(
                                   category.name
                                 )}</div>
@@ -485,6 +632,12 @@
                             })">
                                 View Words
                             </button>
+                            ${!isImported ? `
+                            <button class="btn ${visibility === 'public' ? 'btn-secondary' : 'btn-success'} btn-small" 
+                                    onclick="app.toggleVisibility(${category.id})">
+                                ${visibility === 'public' ? '🔒 Make Private' : '🌍 Make Public'}
+                            </button>
+                            ` : ''}
                             <button class="btn btn-success btn-small" onclick="app.exportCategory(${
                               category.id
                             })">
@@ -639,6 +792,189 @@
           } catch (error) {
             console.error("Failed to migrate:", error);
             alert("Failed to migrate data: " + error.message);
+          }
+        }
+
+        // Tab switching
+        switchTab(tabName) {
+          // Update tab buttons
+          document.querySelectorAll('.tab').forEach(tab => {
+            if (tab.dataset.tab === tabName) {
+              tab.classList.add('active');
+            } else {
+              tab.classList.remove('active');
+            }
+          });
+
+          // Update tab content
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+          });
+          document.getElementById(`${tabName}-tab`).classList.add('active');
+
+          // Load content if needed
+          if (tabName === 'public-library') {
+            this.loadPublicCategories();
+          }
+        }
+
+        // Toggle visibility
+        async toggleVisibility(categoryId) {
+          try {
+            const category = await this.db.getCategory(categoryId);
+            const newVisibility = category.visibility === 'public' ? 'private' : 'public';
+            
+            await this.db.setCategoryVisibility(categoryId, newVisibility);
+            
+            alert(`Category is now ${newVisibility}!`);
+            await this.loadCategories();
+          } catch (error) {
+            console.error('Failed to toggle visibility:', error);
+            alert('Failed to change visibility: ' + error.message);
+          }
+        }
+
+        // Load public categories
+        async loadPublicCategories() {
+          const container = document.getElementById('publicCategoriesContainer');
+          const sortBy = document.getElementById('sortPublic').value;
+          
+          try {
+            container.innerHTML = '<div class="loading">Loading public categories...</div>';
+            
+            const categories = await this.db.getPublicCategories(1, 50, sortBy);
+            
+            if (categories.length === 0) {
+              container.innerHTML = `
+                <div class="empty-state">
+                  <div class="empty-state-icon">🌍</div>
+                  <div class="empty-state-text">No public categories yet</div>
+                  <p>Be the first to share a category with the community!</p>
+                </div>
+              `;
+              return;
+            }
+
+            container.innerHTML = `
+              <div class="categories-grid">
+                ${categories.map(cat => this.renderPublicCategoryCard(cat)).join('')}
+              </div>
+            `;
+          } catch (error) {
+            console.error('Failed to load public categories:', error);
+            container.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <div class="empty-state-text">Failed to load public categories</div>
+                <p>${error.message}</p>
+              </div>
+            `;
+          }
+        }
+
+        // Render public category card
+        renderPublicCategoryCard(category) {
+          const createdDate = new Date(category.createdAt).toLocaleDateString();
+          const isImported = category.isImportedByMe || false;
+          
+          return `
+            <div class="category-card">
+              <div class="category-header">
+                <div>
+                  <span class="badge badge-public">🌍 Public</span>
+                  <div class="category-name">${this.escapeHtml(category.name)}</div>
+                  ${category.description ? `<div class="category-description">${this.escapeHtml(category.description)}</div>` : ''}
+                </div>
+              </div>
+              <div class="category-info">
+                <div class="info-item">
+                  <span>📝</span>
+                  <span>${category.wordCount} words</span>
+                </div>
+                <div class="info-item">
+                  <span>📅</span>
+                  <span>${createdDate}</span>
+                </div>
+              </div>
+              <div class="category-info">
+                <div class="info-item">
+                  <span>🗣️</span>
+                  <span>${category.languagePair.lang1} ↔ ${category.languagePair.lang2}</span>
+                </div>
+              </div>
+              <div class="category-actions">
+                ${isImported 
+                  ? '<button class="btn btn-secondary btn-small" disabled>✓ Imported</button>'
+                  : `<button class="btn btn-primary btn-small" onclick="app.importPublicCategory(${category.id})">📥 Import</button>`
+                }
+              </div>
+            </div>
+          `;
+        }
+
+        // Search public categories
+        async searchPublicCategories() {
+          const query = document.getElementById('searchPublic').value.trim();
+          const container = document.getElementById('publicCategoriesContainer');
+          
+          if (!query) {
+            this.loadPublicCategories();
+            return;
+          }
+
+          try {
+            container.innerHTML = '<div class="loading">Searching...</div>';
+            
+            const categories = await this.db.searchPublicCategories(query);
+            
+            if (categories.length === 0) {
+              container.innerHTML = `
+                <div class="empty-state">
+                  <div class="empty-state-icon">🔍</div>
+                  <div class="empty-state-text">No categories found</div>
+                  <p>Try a different search term</p>
+                </div>
+              `;
+              return;
+            }
+
+            container.innerHTML = `
+              <div class="categories-grid">
+                ${categories.map(cat => this.renderPublicCategoryCard(cat)).join('')}
+              </div>
+            `;
+          } catch (error) {
+            console.error('Failed to search categories:', error);
+            alert('Failed to search: ' + error.message);
+          }
+        }
+
+        // Import public category
+        async importPublicCategory(categoryId) {
+          try {
+            // Check if already imported
+            const hasImported = await this.db.hasImportedCategory(categoryId);
+            if (hasImported) {
+              alert('You have already imported this category!');
+              return;
+            }
+
+            if (!confirm('Import this category? All words will be copied to your account.')) {
+              return;
+            }
+
+            const importedCategory = await this.db.importCategory(categoryId);
+            
+            alert(`Category imported successfully! You now have ${importedCategory.wordCount} new words.`);
+            
+            // Reload public library to update buttons
+            await this.loadPublicCategories();
+            
+            // Update stats
+            await this.loadStatistics();
+          } catch (error) {
+            console.error('Failed to import category:', error);
+            alert('Failed to import category: ' + error.message);
           }
         }
 
