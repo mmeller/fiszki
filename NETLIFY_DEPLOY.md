@@ -7,24 +7,26 @@
 1. **Push your code to GitHub** (already done ✅)
 
 2. **Go to Netlify Dashboard**
+
    - Sign in to [netlify.com](https://netlify.com)
    - Click "Add new site" → "Import an existing project"
    - Choose "GitHub" and authorize
    - Select your `fiszki` repository
 
 3. **Configure Build Settings**
+
    - **Branch to deploy:** `supabase-integration`
    - **Build command:** (leave empty)
    - **Publish directory:** `.` (root)
    - Click "Show advanced" → "New variable"
 
 4. **Add Environment Variables**
-   
+
    Add these two variables:
-   
-   | Key | Value |
-   |-----|-------|
-   | `SUPABASE_URL` | `https://imohtksvibyiekyclvyd.supabase.co` |
+
+   | Key                 | Value                                                     |
+   | ------------------- | --------------------------------------------------------- |
+   | `SUPABASE_URL`      | `https://imohtksvibyiekyclvyd.supabase.co`                |
    | `SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (your full key) |
 
 5. **Deploy!**
@@ -52,11 +54,13 @@ Since Netlify is a static host, we can't use Node.js environment variables direc
 **Cons:** Config is in code (but anon key is public anyway, so it's safe)
 
 **Steps:**
+
 1. Your `config.js` already has the credentials
 2. Just deploy - it will work!
 3. The file is in `.gitignore`, but you can create a build version
 
 **What to do:**
+
 ```bash
 # Copy config.js to a committed version for deployment
 cp config.js config.prod.js
@@ -66,15 +70,17 @@ git push
 ```
 
 Then rename it in Netlify:
+
 - Add a build command: `cp config.prod.js config.js`
 
 ### Approach B: Dynamic config loading (More secure)
 
 Create a new file that loads config dynamically:
 
-**I can help you implement this if you want!** 
+**I can help you implement this if you want!**
 
 It involves:
+
 1. Creating a `config-loader.js` that checks for environment variables
 2. Injecting them at build time using Netlify functions
 3. More complex but more secure
@@ -96,6 +102,7 @@ git push origin netlify-deploy
 ```
 
 Then in Netlify:
+
 - Deploy from `netlify-deploy` branch instead of `supabase-integration`
 
 ---
@@ -103,6 +110,7 @@ Then in Netlify:
 ## 🔐 Security Note
 
 Your Supabase **anon key** is:
+
 - ✅ **Safe to expose** - It's designed for client-side use
 - ✅ **Protected by RLS** - Row Level Security policies prevent unauthorized access
 - ✅ **Public by design** - Even in production apps, it's in browser JavaScript
@@ -118,7 +126,7 @@ The **service_role key** is what you must NEVER expose (you're not using it).
 ```toml
 [build]
   publish = "."
-  
+
 [build.environment]
   NODE_VERSION = "18"
 
@@ -148,6 +156,7 @@ git push
 ## ✅ After Deployment
 
 Test your live site:
+
 1. Visit your Netlify URL
 2. Sign up with a test account
 3. Create categories and words
@@ -161,14 +170,17 @@ Your flashcard app is now live on the internet! 🚀
 ## 🐛 Troubleshooting
 
 ### "config.js not found"
+
 - Make sure you committed `config.production.js` or `config.js`
 - Check Netlify deploy logs
 
 ### "Supabase connection failed"
+
 - Verify your `SUPABASE_URL` and `SUPABASE_ANON_KEY`
 - Check browser console for errors
 
 ### Authentication not working
+
 - Check Supabase → Authentication → URL Configuration
 - Add your Netlify URL to "Site URL"
 - Add to "Redirect URLs": `https://your-site.netlify.app/**`
