@@ -713,9 +713,9 @@
                                 ? "btn-secondary"
                                 : "btn-success"
                             } btn-small" 
-                                    onclick="app.toggleVisibility(${
+                                    onclick="app.toggleVisibility('${
                                       category.id
-                                    })">
+                                    }')">
                                 ${
                                   visibility === "public"
                                     ? "🔒 Make Private"
@@ -725,14 +725,14 @@
                             `
                                 : ""
                             }
-                            <button class="btn btn-success btn-small" onclick="app.exportCategory(${
+                            <button class="btn btn-success btn-small" onclick="app.exportCategory('${
                               category.id
-                            })">
+                            }')">
                                 📥 Export
                             </button>
-                            <button class="btn btn-danger btn-small" onclick="app.deleteCategory(${
+                            <button class="btn btn-danger btn-small" onclick="app.deleteCategory('${
                               category.id
-                            })">
+                            }')">
                                 🗑️ Delete
                             </button>
                         </div>
@@ -1018,7 +1018,7 @@
                 ${
                   isImported
                     ? '<button class="btn btn-secondary btn-small" disabled>✓ Imported</button>'
-                    : `<button class="btn btn-primary btn-small" onclick="app.importPublicCategory(${category.id})">📥 Import</button>`
+                    : `<button class="btn btn-primary btn-small" onclick="app.importPublicCategory('${category.id}')">📥 Import</button>`
                 }
               </div>
             </div>
